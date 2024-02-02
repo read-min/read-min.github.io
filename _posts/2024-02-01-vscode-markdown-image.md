@@ -3,7 +3,6 @@ title: VSCode Markdown 이미지 쉽게 넣기 (github.io)
 categories: [Dev, Markdown]
 tags: [Markdown]
 images:
-    path: /assets/image_post/20240202155327.png
 ---
 github.io를 시작하며 이미지 첨부 방식이 매우 비효율적인 것 같아, 방법을 리서치하였다. 결과적으로 편하게 지원해주는 확장이 존재하기에 소개한다.
 ![](/assets/image_post/20240202152508.png)
