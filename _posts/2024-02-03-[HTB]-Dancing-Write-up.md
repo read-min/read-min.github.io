@@ -42,12 +42,15 @@ do_connect: Connection to 10.129.86.199 failed (Error NT_STATUS_RESOURCE_NAME_NO
 Unable to connect with SMB1 -- no workgroup available
 ```
 각각의 내용은 아래와 같다.
+
+
 | Sharename    | Type  | Comment                    |
 |--------------|-------|----------------------------|
 | ADMIN$       | Disk  | 원격 관리를 위한 특별한 공유 폴더로, 시스템 관리자가 원격으로 서버를 관리하는 데 사용됩니다.               |
 | C$           | Disk  | 서버의 C 드라이브에 대한 기본 공유로, 서버의 파일 시스템에 접근할 수 있도록 합니다.                         |
 | IPC$         | IPC   | Inter-Process Communication(프로세스 간 통신)에 사용되는 특수한 공유 폴더로, 사용자들이 직접 접근할 필요가 없습니다. |
 | WorkShares   | Disk  | 서버에서 추가로 설정된 디스크 또는 디렉토리를 나타내며, 해당 폴더의 "Disk" 타입은 파일 및 디렉토리를 공유할 수 있음을 의미합니다. "Comment"에는 해당 공유에 대한 설명이나 주석이 들어갑니다. |
+
 
 문제 6번에 대한 답이 당연히 'anonymous'인줄 알았으나, 오답이였다. 힌트를 확인해보니, 위 결과에서 $가 없는 이름이 정답인듯 하다.
 ![](../assets/image_post/20240203163617.png)
