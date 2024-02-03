@@ -1,5 +1,5 @@
 ---
-title: [HTB] 
+title: [HTB] Fawn Write-up
 categories: [HackTheBox, Basic]
 tags: [HackTheBox]
 images:
