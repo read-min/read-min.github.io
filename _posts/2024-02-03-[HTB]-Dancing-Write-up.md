@@ -42,6 +42,7 @@ do_connect: Connection to 10.129.86.199 failed (Error NT_STATUS_RESOURCE_NAME_NO
 Unable to connect with SMB1 -- no workgroup available
 ```
 각각의 내용은 아래와 같다.
+<br/><br/>
 
 
 | Sharename    | Type  | Comment                    |
