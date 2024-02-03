@@ -1,5 +1,5 @@
 ---
-title: HTB Dancing Write-up
+title: HTB Redeemer Write-up
 categories: [HackTheBox, Basic]
 tags: [HackTheBox, TCP]
 images:
