@@ -3,7 +3,7 @@ title: [HTB] Fawn Write-up
 categories: [HackTheBox, Basic]
 tags: [HackTheBox]
 images:
-    path: 
+    path: /assets/image_post/20240203134342.png
 ---
 핵더박스 두번째 기본 문제
 ![](../assets/image_post/20240203132223.png)
