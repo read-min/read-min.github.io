@@ -1,7 +1,7 @@
 ---
 title: HTB Dancing Write-up
 categories: [HackTheBox, Basic]
-tags: [HackTheBox, SMB]
+tags: [HackTheBox, SMB, smbclient]
 images:
     path: 
 ---
