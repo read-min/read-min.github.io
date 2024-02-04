@@ -1,7 +1,7 @@
 ---
 title: HTB Appointment Write-up
 categories: [HackTheBox, Basic]
-tags: [HackTheBox, Gobuster]
+tags: [HackTheBox, Gobuster, Sql, Injection]
 images:
     path: 
 ---
