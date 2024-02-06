@@ -3,7 +3,7 @@ title: HTB Responder Write-up
 categories: [HackTheBox, Basic]
 tags: [HackTheBox]
 image:
-    path: 
+    path: /assets/image_post/20240206200539.png
 ---
 
 대상 서버 nmap 스캔 결과는 아래와 같다. (동일한 인자를 줬지만 kali에선 되고 mac에선 되지 않았다...왜그럴까..)
