@@ -2,7 +2,7 @@
 title: HTB Sequel Write-up
 categories: [HackTheBox, Basic]
 tags: [HackTheBox, SQL, MySQL, MariaDB]
-images:
+image:
     path: 
 ---
 이번 문제는 질문을 보니 MySQL과 관련된 문제인듯 하다. 우선 포트 스캔의 결과부터 보자

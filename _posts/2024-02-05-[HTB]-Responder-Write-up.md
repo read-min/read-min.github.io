@@ -2,7 +2,7 @@
 title: HTB Responder Write-up
 categories: [HackTheBox, Basic]
 tags: [HackTheBox]
-images:
+image:
     path: 
 ---
 
