@@ -3,7 +3,7 @@ title: HTB Redeemer Write-up
 categories: [HackTheBox, Basic]
 tags: [HackTheBox, TCP, Redis, redis-cli]
 image:
-    path: ../assets/image_post/20240203170310.png
+    path: /assets/image_post/20240203170310.png
 ---
 이번 문제는 TCP 관련 문제로 보인다.
 ![](../assets/image_post/20240203170310.png)
