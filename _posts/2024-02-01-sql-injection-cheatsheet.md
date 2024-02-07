@@ -2,8 +2,8 @@
 title: SQL Injection Cheat Sheet
 categories: [ETC., Cheatsheet]
 tags: [SQL, Injection]
-images:
-    path: 
+image:
+    path: /assets/image_post/20240207111818.png
 ---
 SQL Injection 공격 구문 정리를 위한 페이지로 지속적으로 업데이트 예정
 

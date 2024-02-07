@@ -2,8 +2,8 @@
 title: HTB Dancing Write-up
 categories: [HackTheBox, Basic]
 tags: [HackTheBox, SMB, smbclient]
-images:
-    path: 
+image:
+    path: /assets/image_post/20240207111335.png
 ---
 이번 문제는 SMB 관련된 기초 문제이다.
 ![](../assets/image_post/20240203162738.png)

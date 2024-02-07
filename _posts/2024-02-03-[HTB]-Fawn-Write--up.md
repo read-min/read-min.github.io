@@ -2,8 +2,8 @@
 title: HTB Fawn Write-up
 categories: [HackTheBox, Basic]
 tags: [HackTheBox, FTP]
-images:
-    path: 
+image:
+    path: /assets/image_post/20240207111408.png
 ---
 핵더박스 두번째 기본 문제
 ![](../assets/image_post/20240203132223.png)

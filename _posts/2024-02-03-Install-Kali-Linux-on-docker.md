@@ -2,8 +2,8 @@
 title: Docker Kali Linux 설치
 categories: [ETC., Tools]
 tags: [Docker, Kali]
-images:
-    path: 
+image:
+    path: /assets/image_post/20240207111627.png
 ---
 
 MacOS 환경에 Kali Linux 테스트 환경이 필요하여 Docker에 Kali linux 구동을 목표로 한다.

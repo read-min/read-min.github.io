@@ -2,8 +2,8 @@
 title: HTB Crocodile Write-up
 categories: [HackTheBox, Basic]
 tags: [HackTheBox]
-images:
-    path: 
+image:
+    path: /assets/image_post/20240207111948.png
 ---
 
 이번 문제 역시 nmap으로 먼저 스캔을 해보자. 스캔할때는 기본적으로 `-sC`와 `-sV`를 붙이는게 좋을 것 같다.

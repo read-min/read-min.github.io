@@ -2,8 +2,8 @@
 title: HTB Appointment Write-up
 categories: [HackTheBox, Basic]
 tags: [HackTheBox, Gobuster, Sql, Injection]
-images:
-    path: 
+image:
+    path: /assets/image_post/20240207111923.png
 ---
 대상 서버에서 동작하는 서비스에 대해 먼저 알아보자. 
 

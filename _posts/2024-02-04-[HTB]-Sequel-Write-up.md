@@ -2,8 +2,8 @@
 title: HTB Sequel Write-up
 categories: [HackTheBox, Basic]
 tags: [HackTheBox, SQL, MySQL, MariaDB]
-images:
-    path: 
+image:
+    path: /assets/image_post/20240207112018.png
 ---
 이번 문제는 질문을 보니 MySQL과 관련된 문제인듯 하다. 우선 포트 스캔의 결과부터 보자
 ``` bash
