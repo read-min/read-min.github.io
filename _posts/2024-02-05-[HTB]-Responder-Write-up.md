@@ -22,13 +22,32 @@ Service detection performed. Please report any incorrect results at https://nmap
 Nmap done: 1 IP address (1 host up) scanned in 197.03 seconds
 ```
 
+80 port로 접근가 열려있는 것을 확인할 수 있으며, 접근 시 아래와 같이 .htb 사이트로 이동된다.
 
-```
-# curl 10.129.2.235
+``` bash
+# curl 10.129.73.133
 <meta http-equiv="refresh" content="0;url=http://unika.htb/">#
 ```
 
-작성중
+하지만 이동 된 후 아무 페이지를 찾을 수 없다는 내용만 존재하여, 다양한 시도를 해보았으나 문제를 풀 수가 없었다.
+![](../assets/image_post/20240207174302.png)
+
+알고 보니 해당 증상은 문제가 있는 것으로 아래와 같이 hosts 파일을 수정해주어야 정상적으로 사이트에 접근된다.
+``` bash 
+sudo vi /etc/hosts
+
+# 아래 IP는 각자 발급 받은 Machine의 IP 입력 필요
+10.129.73.133    unika.htb
+```
+
+수정 후 사이트에 접근하면 정상적으로 접근되는 것을 확인 할 수 있다.
+![](../assets/image_post/20240207174736.png)
+
+문제를 풀던 중 아래 문제의 답이 도저히 나오지 않아 결국 타 공략을 보았다. NT Lan Manager가 많이 나와 왜 글자 수가 다르지? 생각했지만, NT도 줄임말이여서 그런 것이였다...괜히 패배한 기분이다.
+![](../assets/image_post/20240207175049.png)
 
 
-10.129.2.235
+
+작성 중
+
+10.129.73.133
