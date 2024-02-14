@@ -3,7 +3,7 @@ title: Linux Samba 설치 오류 (NT_STATUS_ACCESS_DENIED)
 categories: [ETC., Tool]
 tags: [Samba, SMB]
 image:
-    path: /assets/image_post/20240214181043.png)
+    path: /assets/image_post/20240214181043.png
 ---
 
 kali linux 환경에 samba를 설치하여 rfi를 테스트하고자 하였으나, 별 것도 아닌 에러 문제로 고생한 내역이 있어 저장해놓고자 한다. 우선 `apt install samba` 등을 통해 samba를 설치했다면 아래와 같이 공유하고자 하는 경로와 이름을 지정해주어야 한다. 나의 경우 'rfi' 란 이름의 '/home/user/rfi'를 지정하였고, 게스트 접속을 허용 했다. 
