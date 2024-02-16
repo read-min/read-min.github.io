@@ -6,7 +6,12 @@ image:
     path: /assets/image_post/20240216110334.png
 draft: true
 ---
+
+*※ HTB Write-up의 경우 풀이 과정 중 machine을 자주 변경하여 풀이 과정 중에 기재한 IP가 모두 다릅니다. 하지만 실제론 동일한 서버이므로 참고 바랍니다.*
+
+---
 ![](../assets/image_post/20240216110356.png)
+---
 
 우선 nmap으로 먼저 스캔해보자. 아래와 같이 탐지 내역이 꽤 많다. `rpc`, `smb`, `mssql` 관련된 port가 활성화 되어있는 것을 알 수 있다.
 ``` bash
@@ -108,10 +113,26 @@ sql 계정으로 추청되는 id, pw 값 획득이 가능하다.
 </DTSConfiguration>
 ```
 
-???  획득한 정보를 갖고 mssql에 연결을 시도해보자. `pip install mssql-cli` 명령어를 통해 설치 후 아래와 같이 접속을 한다.
+mssql-cli를 설치하여 실행해보려 햇으나, mssql-cli 자체가 실행 시 오류를 발생시켜 해당 도구로는 테스트하지 못했다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# mssql-cli -S 10.129.95.187 -U sql_svc -P M3g4c0rp123
+FailFast:
+Couldn't find a valid ICU package installed on the system. Set the configuration flag System.Globalization.Invariant to true if you want to run with no globalization support.
+
+   at System.Environment.FailFast(System.String)
+   at System.Globalization.GlobalizationMode.GetGlobalizationInvariantMode()
+   at System.Globalization.GlobalizationMode..cctor()
+   at System.Globalization.CultureData.CreateCultureWithInvariantData()
+   at System.Globalization.CultureData.get_Invariant()
+   at System.Globalization.CultureInfo..cctor()
+```
+
+그래서 Windows 환경에 [SSMS](https://learn.microsoft.com/ko-kr/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver16)를 설치하여 접근을 시도하였다. 접근은 되는 듯 하나 사용자 계정 정보 오류를 확인 할 수 있었다.
+![](../assets/image_post/20240216154546.png)
 
 
-rpcclient로 해당 계정으로 접근해보았더니, 접근이 된다. mssql의 그것이 아닌가?
+그리하여 마지막으로 rpcclient로 해당 계정으로 접근해보았더니, 접근이 된다...! dfsConfig는 SQL 관련 패키지 속성 값인데 왜 rpc와 관련이 있는 것일까......
 ``` bash
 ┌──(root㉿kali)-[/home/user]
 └─# rpcclient -U sql_svc 10.129.95.187

@@ -92,3 +92,15 @@ Bindings:
 rpcclient $> getusername
 do_cmd: Could not initialise lsarpc. Error was NT_STATUS_ACCESS_DENIED
 ```
+
+지정된 계정으로 접근 시 아래와 같다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# rpcclient -U sql_svc 10.129.95.187
+Password for [WORKGROUP\sql_svc]:
+rpcclient $> srvinfo
+        10.129.95.187  Wk Sv Sql NT SNT PtB LMB
+        platform_id     :       500
+        os version      :       10.0
+        server type     :       0x59007
+```
