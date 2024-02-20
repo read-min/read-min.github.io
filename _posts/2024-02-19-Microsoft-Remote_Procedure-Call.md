@@ -32,7 +32,7 @@ PORT     STATE SERVICE      VERSION
 139/tcp  open  netbios-ssn  Microsoft Windows netbios-ssn
 ```
 
-
+impacket의 rpcdump를 사용할 경우 아래와 같이 endpoint가 열거된다.
 ``` bash
 ┌──(root㉿kali)-[/home/user]
 └─# impacket-rpcdump -port 135 10.129.95.187

