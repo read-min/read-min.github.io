@@ -4,7 +4,6 @@ categories: [HackTheBox, Basic]
 tags: [HackTheBox]
 image:
     path: /assets/image_post/20240216110334.png
-draft: true
 ---
 
 *※ HTB Write-up의 경우 풀이 과정 중 machine을 자주 변경하여 풀이 과정 중에 기재한 IP가 모두 다릅니다. 하지만 실제론 동일한 서버이므로 참고 바랍니다.*
