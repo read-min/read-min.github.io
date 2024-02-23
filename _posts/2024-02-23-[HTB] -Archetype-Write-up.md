@@ -10,7 +10,6 @@ image:
 
 ---
 ![](../assets/image_post/20240216110356.png)
----
 
 ### Scan
 우선 nmap으로 먼저 스캔해보자. 아래와 같이 탐지 내역이 꽤 많다. `rpc`, `smb`, `mssql` 관련된 port가 활성화 되어있는 것을 알 수 있다.
