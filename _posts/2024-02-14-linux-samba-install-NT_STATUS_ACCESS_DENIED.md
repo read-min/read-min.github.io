@@ -1,6 +1,6 @@
 ---
 title: Linux Samba 설치 오류 (NT_STATUS_ACCESS_DENIED)
-categories: [ETC., Tool]
+categories: [ETC., Tools]
 tags: [Samba, SMB]
 image:
     path: /assets/image_post/20240214181043.png
