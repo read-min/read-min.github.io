@@ -56,6 +56,17 @@ Last login: Sun Feb 25 03:34:08 2024 from 192.168.65.1
 ``` bash
 --sysctl net.ipv6.conf.all.disable_ipv6=0
 ```
+인자 추가 후 openvpn을 다시 실행해보면 성공적으로 연결에 성공하여 아래와 같이 tun0에 ip가 할당된 것을 볼 수 있다.
+``` bash
+13: tun0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UNKNOWN group default qlen 500
+    link/none
+    inet 10.10.14.175/23 scope global tun0
+       valid_lft forever preferred_lft forever
+    inet6 dead:beef:2::10ad/64 scope global
+       valid_lft forever preferred_lft forever
+    inet6 fe80::a9ec:1c5a:b715:eb3d/64 scope link stable-privacy proto kernel_ll
+       valid_lft forever preferred_lft forever
+```
 
 참고 링크는 아래와 같다.
 > https://www.reddit.com/r/docker/comments/is5ggw/trouble_using_openvpn_inside_container/
