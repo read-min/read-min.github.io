@@ -40,3 +40,8 @@ zsh: suspended  nc -lnvp 443
 [15]    continued  nc -lnvp 443
 
 postgres@vaccine:/var/lib/postgresql$
+
+
+
+reference
+> https://medium.com/@aniketdas07770/hackthebox-vaccine-writeup-f5e19028a3fa
