@@ -3,7 +3,7 @@ title: Shell Terminal 입출력 연결
 categories: [ETC., Tools]
 tags: [shell, pytho, pty, reverseshell]
 image:
-    path: /assets/image_post/20240228151831.png
+    path: /assets/image_post/20240228155410.png
 ---
 
 htb 문제 풀이 중 shell 연결 시 화살표 입력, 자동 완성 등이 입력되지 않고 `]A` 와 같은 형태로 입력되어 다소 불편함이 존재한다. 이를 해결하는 방법을 찾아 공유한다.
