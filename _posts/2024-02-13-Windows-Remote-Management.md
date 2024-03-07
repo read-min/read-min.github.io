@@ -1,6 +1,6 @@
 ---
 title: Windows Remote Management (WinRM)
-categories: [Pentest, Windows]
+categories: [Theory, Windows]
 tags: [WinRM, wsman, Windows, Evil-WinRM]
 image:
     path: /assets/image_post/20240213174835.png

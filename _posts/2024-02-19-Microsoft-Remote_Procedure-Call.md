@@ -1,6 +1,6 @@
 ---
 title: Microsoft Remote Procedure Call(RPC)
-categories: [Pentest, Windows]
+categories: [Theory, Windows]
 tags: [Windows, RPC]
 image:
     path: /assets/image_post/20240216132648.png

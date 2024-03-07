@@ -1,6 +1,6 @@
 ---
 title: RFI PHP Application bypass Remote URL
-categories: [Pentest, Web]
+categories: [Theory, Web]
 tags: [RFI, PHP, Web, Samba, SMB]
 image:
     path: /assets/image_post/20240214193626.png
