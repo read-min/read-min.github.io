@@ -1,12 +1,10 @@
 ---
 title: NCC ScoutSuite
 categories: [ETC., Tools]
-tags: [aws]
+tags: [aws, tool, ncc, scoutsuite, cloud]
 image:
     path: /assets/image_post/20240311160445.png
 ---
-> test
-{: .prompt-tip }
 
 ## [0x00] Ncc ScoutSuite
 ---
