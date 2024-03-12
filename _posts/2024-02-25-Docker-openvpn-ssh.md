@@ -6,24 +6,39 @@ image:
     path: /assets/image_post/20240207111627.png
 ---
 
-### 요약
+## [0x00] summary
+---
+Docker Run
 ``` bash
  read-min 🇰   ~  docker run --privileged --sysctl net.ipv6.conf.all.disable_ipv6=0 -it -p 2222:22 -p 8888:8000 kali-htb /bin/sh
 ```
----------
+Connect SSH
+```
+ read-min 😎   ~  ssh root@localhost -p 2222
+```
+
+## [0x01] overview
+---
 현재 환경 상 Docker에 Kali Linux를 구동하여 호스트에서 ssh 접속이 필요하고, 연결 후 openvpn을 활성화해야한다. 이 과정 중에 필요한 설정들이 존재하기에 메모 차 기록한다.
 
+
+## [0x02] container setting
+---
 컨테이너 환경에서 openssh 설치 후 /etc/ssh/sshd_config에 아래와 같이 변경 후 `service ssh restart` 하여 적용해야 한다.
 ``` bash
 PermitRootLogin yes
 PasswordAuthentication yes
 ```
 
+## [0x03] host setting
+---
 하지만 위와 같이 해놓고 끝이 아니라, 컨테이너 실행 시 포트를 연결해주어야 한다. 아래의 경우 외부 2222번과 내부 22번 포트를 연결하는 명령어 이다. 8888과 8000도 테스트 차 연결하였다
 ``` bash
  -p 2222:22 -p 8888:8000
 ```
 
+## [0x04] connect ssh
+---
 이후 ssh를 연결할 때 아래와 같이 host에서 localhost로 접근을 해야 한다.
 ``` bash
  read-min 😎   ~  ssh root@localhost -p 2222
@@ -41,7 +56,9 @@ Last login: Sun Feb 25 03:34:08 2024 from 192.168.65.1
 └─# ls
 ```
 
-이제 openvpn 연결하는 방법에 대해 알아보자. 실행 된 컨테이너에서 openvpn을 사용하고자 하면 아래와 같이 에러를 맞이하게 된다.
+##  [0x05] openvpn in container
+---
+이제 컨테이너 내에서 openvpn 연결하는 방법에 대해 알아보자. 실행 된 컨테이너에서 openvpn을 사용하고자 하면 아래와 같이 에러를 맞이하게 된다.
 ``` bash
 # # openvpn starting_point_readmin520.ovpn
 2024-02-25 03:39:09 GDG6: remote_host_ipv6=n/a
@@ -68,5 +85,5 @@ Last login: Sun Feb 25 03:34:08 2024 from 192.168.65.1
        valid_lft forever preferred_lft forever
 ```
 
-참고 링크는 아래와 같다.
+## [0x06] reference
 > https://www.reddit.com/r/docker/comments/is5ggw/trouble_using_openvpn_inside_container/
