@@ -1,7 +1,7 @@
 ---
 title: HTB Unified Write-up
 categories: [HackTheBox, Basic]
-tags: [HackTheBox]
+tags: [HackTheBox, mongo, log4j, log4shell, mkpasswd, nosql, database, mongodb]
 image:
     path: /assets/image_post/20240228215601.png
 ---
@@ -10,7 +10,7 @@ image:
 
 ![](../assets/image_post/20240228215615.png)
 
-## [0x00] Port Scan
+## [0x00] port Scan
 ---
 port 스캔 결과 22, 6789, 8080, 8443이 열려 있다. 이 중 ibm-db2-admin은 IBM DB2 데이터베이스의 관리자 인터페이스에 대한 포트가 열려 있음을 나타내는 것으로 보인다.
 ``` bash
@@ -93,7 +93,7 @@ PORT     STATE SERVICE         VERSION
 ![](../assets/image_post/20240311185044.png)
 
 
-## [0x01] UniFi CVE-2021-44228
+## [0x01] uniFi CVE-2021-44228
 --- 
 이번 문제의 경우 특정 제품의 버전 정보를 통해 cve를 찾는 듯하다. 위 페이지에서 획득한 정보는 'UniFi Network'와 관련된 것으로 보이며, 로고 밑에 적혀 있는 것과 같이 6.4.54 버전이다. 관련하여 정보를 검새해보니 Log4j에 취약한 프로그램으로 보이며, 관련된 [Python github PoC](https://github.com/puzzlepeaches/Log4jUnifi)가 존재한다. 
 ![](../assets/image_post/20240311185745.png)
@@ -126,7 +126,7 @@ unifi
 ```
 이제 쉘을 획득하였으니 어떤 정보가 있는지 확인해보자.
 
-## [0x02] MongoDB 
+## [0x02] mongoDB 
 ---
 우선 process 목록을 먼저 보니 mongod 를 통해 27117 port에서 mongoDB가 실행되고 있음을 알 수 있다. 추가로, 최소화된 프로세스 목록과 docker 키워드를 통해 하나의 컨테이너임을 알 수 있다.
 ``` bash
@@ -211,7 +211,7 @@ mongodb에서는 db.xx.xx() 와 같은 형태로 다양한 기능을 사용할 �
 ...
 ```
 
-## [0x03] Change x_shadow
+## [0x03] change x_shadow
 ---
 mongo에는 `db.admin.find()`와 마찬가지로 항목을 업데이트 하는 `db.admin.update()`가 존재한다. 직접 패스워드 crack을 할 수는 없으니, 임의의 값으로 update 시키고자 한다.
 
@@ -277,7 +277,7 @@ root@unified:~# cat root.txt
     e50bc93c75b634e4b272d2f771c33681
 ```
 
-## [0x05] Get user flag
+## [0x05] get user flag
 ---
 위의 내용 중 michael 사용자 폴더가 존재하여 접근해보니 flag 파일 중 하나가 있다.
 ``` bash
