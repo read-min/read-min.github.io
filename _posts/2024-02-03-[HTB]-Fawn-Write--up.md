@@ -1,6 +1,6 @@
 ---
 title: HTB Fawn Write-up
-categories: [HackTheBox, Basic]
+categories: [HackTheBox, StartingPoint]
 tags: [HackTheBox, FTP]
 image:
     path: /assets/image_post/20240207111408.png

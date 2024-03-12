@@ -1,6 +1,6 @@
 ---
 title: HTB Responder Write-up
-categories: [HackTheBox, Basic]
+categories: [HackTheBox, StartingPoint]
 tags: [HackTheBox, WinRM, Evil-WinRM, wsman, LFI, RFI]
 image:
     path: /assets/image_post/20240206200539.png

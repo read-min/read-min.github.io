@@ -1,6 +1,6 @@
 ---
 title: HTB Dancing Write-up
-categories: [HackTheBox, Basic]
+categories: [HackTheBox, StartingPoint]
 tags: [HackTheBox, SMB, smbclient]
 image:
     path: /assets/image_post/20240207111335.png

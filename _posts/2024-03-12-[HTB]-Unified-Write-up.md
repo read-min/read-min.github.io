@@ -1,6 +1,6 @@
 ---
 title: HTB Unified Write-up
-categories: [HackTheBox, Basic]
+categories: [HackTheBox, StartingPoint]
 tags: [HackTheBox, mongo, log4j, log4shell, mkpasswd, nosql, database, mongodb]
 image:
     path: /assets/image_post/20240228215601.png

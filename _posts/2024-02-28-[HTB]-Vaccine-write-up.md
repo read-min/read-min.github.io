@@ -1,6 +1,6 @@
 ---
 title: HTB Vaccine Write-up
-categories: [HackTheBox, Basic]
+categories: [HackTheBox, StartingPoint]
 tags: [HackTheBox, sudo-l, shell, sqlmap, os-shell, crack, john, gobuster, ftp, visudo]
 image:
     path: /assets/image_post/20240226223335.png

@@ -1,6 +1,6 @@
 ---
 title: HTB Sequel Write-up
-categories: [HackTheBox, Basic]
+categories: [HackTheBox, StartingPoint]
 tags: [HackTheBox, SQL, MySQL, MariaDB]
 image:
     path: /assets/image_post/20240207112018.png

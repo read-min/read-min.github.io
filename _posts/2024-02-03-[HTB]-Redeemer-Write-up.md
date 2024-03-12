@@ -1,6 +1,6 @@
 ---
 title: HTB Redeemer Write-up
-categories: [HackTheBox, Basic]
+categories: [HackTheBox, StartingPoint]
 tags: [HackTheBox, TCP, Redis, redis-cli]
 image:
     path: /assets/image_post/20240207111503.png

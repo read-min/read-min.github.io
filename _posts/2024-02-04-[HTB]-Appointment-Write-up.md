@@ -1,6 +1,6 @@
 ---
 title: HTB Appointment Write-up
-categories: [HackTheBox, Basic]
+categories: [HackTheBox, StartingPoint]
 tags: [HackTheBox, Gobuster, Sql, Injection]
 image:
     path: /assets/image_post/20240207111923.png

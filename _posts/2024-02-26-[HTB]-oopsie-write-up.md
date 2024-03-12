@@ -1,6 +1,6 @@
 ---
 title: HTB Oopsie Write-up
-categories: [HackTheBox, Basic]
+categories: [HackTheBox, StartingPoint]
 tags: [HackTheBox, setuid, gobuster, lpe, strace]
 image:
     path: /assets/image_post/20240226103907.png

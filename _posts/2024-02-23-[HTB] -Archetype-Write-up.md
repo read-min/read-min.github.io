@@ -1,6 +1,6 @@
 ---
 title: HTB Archetype Write-up
-categories: [HackTheBox, Basic]
+categories: [HackTheBox, StartingPoint]
 tags: [HackTheBox, smb, winrm, winpeas, impacket, mssqlclient, netcat, reverseshell,bindshell]
 image:
     path: /assets/image_post/20240216110334.png

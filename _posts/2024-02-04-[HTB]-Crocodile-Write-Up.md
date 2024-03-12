@@ -1,6 +1,6 @@
 ---
 title: HTB Crocodile Write-up
-categories: [HackTheBox, Basic]
+categories: [HackTheBox, StartingPoint]
 tags: [HackTheBox]
 image:
     path: /assets/image_post/20240207111948.png

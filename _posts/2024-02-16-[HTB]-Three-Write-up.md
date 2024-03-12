@@ -1,6 +1,6 @@
 ---
 title: HTB Three Write-up
-categories: [HackTheBox, Basic]
+categories: [HackTheBox, StartingPoint]
 tags: [HackTheBox, Gobuster, AWS, S3, awscli]
 image:
     path: /assets/image_post/20240214231540.png
