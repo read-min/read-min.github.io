@@ -5,7 +5,7 @@ tags: [HackTheBox]
 image:
     path: /assets/image_post/20240228215601.png
 ---
-> 여러 번 machine을 재실행하여 write-up 내용에 ip가 서로 상이. 실제론 동일한 문제 환경
+> 여러 번 machine을 재실행하여 write-up 내용에 ip가 서로 상이하지만, 실제론 한 문제의 동일한 환경이다.
 {: .prompt-tip }
 
 ![](../assets/image_post/20240228215615.png)
@@ -93,7 +93,7 @@ PORT     STATE SERVICE         VERSION
 ![](../assets/image_post/20240311185044.png)
 
 
-## UniFi CVE-2021-44228
+## [0x01] UniFi CVE-2021-44228
 --- 
 이번 문제의 경우 특정 제품의 버전 정보를 통해 cve를 찾는 듯하다. 위 페이지에서 획득한 정보는 'UniFi Network'와 관련된 것으로 보이며, 로고 밑에 적혀 있는 것과 같이 6.4.54 버전이다. 관련하여 정보를 검새해보니 Log4j에 취약한 프로그램으로 보이며, 관련된 [Python github PoC](https://github.com/puzzlepeaches/Log4jUnifi)가 존재한다. 
 ![](../assets/image_post/20240311185745.png)
@@ -126,7 +126,7 @@ unifi
 ```
 이제 쉘을 획득하였으니 어떤 정보가 있는지 확인해보자.
 
-## MongoDB 
+## [0x02] MongoDB 
 ---
 우선 process 목록을 먼저 보니 mongod 를 통해 27117 port에서 mongoDB가 실행되고 있음을 알 수 있다. 추가로, 최소화된 프로세스 목록과 docker 키워드를 통해 하나의 컨테이너임을 알 수 있다.
 ``` bash
@@ -211,7 +211,7 @@ mongodb에서는 db.xx.xx() 와 같은 형태로 다양한 기능을 사용할 �
 ...
 ```
 
-## Change x_shadow
+## [0x03] Change x_shadow
 ---
 mongo에는 `db.admin.find()`와 마찬가지로 항목을 업데이트 하는 `db.admin.update()`가 존재한다. 직접 패스워드 crack을 할 수는 없으니, 임의의 값으로 update 시키고자 한다.
 
@@ -242,7 +242,7 @@ WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
 ```
 
 
-## login administrator & get root flag
+## [0x04] login administrator & get root flag
 ---
 성공적으로 hash값이 변경되었다면 로그인을 해보자. 아래와 같이 성공적으로 로그인 할 수 있다.
 ![](../assets/image_post/20240312182934.png)
@@ -277,7 +277,7 @@ root@unified:~# cat root.txt
     e50bc93c75b634e4b272d2f771c33681
 ```
 
-## Get user flag
+## [0x05] Get user flag
 ---
 위의 내용 중 michael 사용자 폴더가 존재하여 접근해보니 flag 파일 중 하나가 있다.
 ``` bash
@@ -295,7 +295,7 @@ drwx------ 2 1000 1000 4096 Jan  2  2022 .ssh
 6ced1a6a89e666c0620cdb10262ba127
 ```
 
-## conclusion
+## [0x06] conclusion
 ---
 해당 문제의 경우 log4shell과 moongo를 이용하여 풀어야하는 문제였다. mongo 관련 된 부분은 매우 낯설었다. db와 관련된 부분도 확실히 좀 더 공부가 필요할 듯 하다.
 ![](../assets/image_post/20240312183850.png)
