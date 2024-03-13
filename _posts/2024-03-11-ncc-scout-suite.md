@@ -37,7 +37,7 @@ root@user-pc:/home/user# pip install scoutsuite
 
 이후 aceess_key 발급과 함께 secret을 확인하여 아래와 같이 입력해주면 된다.
 ``` bash
-root@test-ubuntu:/home/user# scout aws --access-keys --access-key-id AKI███████████████PR --secret-access-key 0Ar█████2h█████tRLYg█████iHO9██████████v
+root@test-ubuntu:/home/user# scout aws --access-keys --access-key-id A██████████████████R --secret-access-key 0█████████████████████████████████████v
 2024-03-11 06:29:30 test-ubuntu scout[2128708] INFO Launching Scout
 2024-03-11 06:29:30 test-ubuntu scout[2128708] INFO Authenticating to cloud provider
 2024-03-11 06:29:34 test-ubuntu scout[2128708] INFO Gathering data from APIs
