@@ -95,7 +95,7 @@ TOTAL:                 3.51KB           6.82Kb                                  
 ---
 iftop과 유사한 도구이지만, 좀 더 간결하게 bps, pps 값을 확인 가능한 도구로 vnstat이 있다. 개인적으로 pps 구하는 도구를 찾기가 가장 어려웠다.
 ``` bash
-root@blvkcs-nids01:/data/suricata/script# vnstat -l -i ens1f1np1
+root@test-ubuntu:/data/suricata/script# vnstat -l -i ens1f1np1
 Monitoring ens1f1np1...    (press CTRL-C to stop)
    rx:     3.62 Gbit/s 456972 p/s          tx:         0 bit/s     0 p/
 ```
