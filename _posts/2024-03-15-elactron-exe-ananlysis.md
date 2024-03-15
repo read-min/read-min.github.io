@@ -109,7 +109,13 @@ Commands:
 2024-03-13  오후 05:56             1,694 preload.js
 ```
 
-## [0x04] reference
+## [0x04] conclusion
+---
+electron으로 제작된 exe 파일 분석 방법에 대해 알아보았다. 특이한점은 electron으로 빌드된 프로그램들이 각각 app.asar 파일을 갖는데, 이걸 서로 바꿔주면 겉 껍데기만 다른 프로그램으로 실행 된다. 예로, A프로그램의 app.asar을 B프로그램의 app.asar 파일에 덮어씌우고 B를 실행하면 A가 실행된다. 겉에 아이콘과 실제 구동되는 내용이 다른 형태가 되는 것이다. 이런 점을 이용해 공격에 사용할 수도 있지 않을까싶기도 하다.
+![](../assets/image_post/20240315125848.png)
+
+
+## [0x05] reference
 ---
 - https://gist.github.com/frolleks/01b9555b678c7f5a6c31aba33c632606
 
