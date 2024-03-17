@@ -1,7 +1,7 @@
 ---
 title: 
-categories: [HackTheBox, Machines]
-tags: [HackTheBox]
+categories: [aa, bb]
+tags: [aa]
 image:
     path: 
 ---
