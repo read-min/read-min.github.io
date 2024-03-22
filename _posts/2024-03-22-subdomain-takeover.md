@@ -185,8 +185,13 @@ cname 설정에 따라 'a12discover.testex.com'에 들어온 요청은 'a12disco
 **현재 대답**
 > 만약 github 블로그를 통해 받은 `~~~.github.io`와 같은 도메인을 기업(조직)이 dns 서버에 cname으로 등록해놓았다면, 해당 기업은 subdomain takeover의 취약 가능성에 노출 된다. dns에 등록된 상태에서 추후 해당 블로그를 없앤채로 놔둔다면, 공격자가 해당 도메인으로 다시 발급받아서 사용하면 된다.
 
+## [0x08] conclusion
+---
+내용을 정리하다보니 생각보다 많이 길어졌다😎. 실제 큰 기업일수록 dns 설정 정보에 많은 데이터가 포함되어 있어 관리가 미흡할 수 있다. 물론 버그바운터 입장에서도 꽤 수입이 짭짤한 항목이다보니 관심이 있다면 reference에 첨부한 버그바운티 사례를 보면 좋을 하다. 
 
-## [0x08] reference
+현직자로서 실제 dns에 등록된 cname 값과 amass로 수집한 결과를 보면 다소 차이가 있긴하다. 실제로는 등록된 정보가 더 많다보니 더 다양한 도구도 알아봐야하지 않나 싶다.🤔
+
+## [0x09] reference
 ---
 공격 시나리오 참고
 - https://informer.io/resources/subdomain-takeover
