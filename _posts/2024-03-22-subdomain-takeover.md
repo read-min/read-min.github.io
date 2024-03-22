@@ -61,15 +61,16 @@ readmin 기업은 dns 서버에 `help.readmin.com -> service.readmin.ex-provider
 ![](../assets/image_post/20240321193329.png)
 
 이렇게 서비스를 하다가 readmin 기업은 지속적인 지출 절감 등의 이유로 기존의 계약을 해제해야 한다. 이제 계약은 해제되어 `service.readmin.ex-provider.com`에 접속을 할 수 없다. 
-> 여기서 가장 중요한 점은 dns의 등록해놓은 설정은 실수로 제거하지 않아야한다.
+> 여기서 가장 중요한 점은 dns애 등록해놓은 cname 설정은 실수로 제거하지 않은 상태이다.
 {: .prompt-tip }
 
 ![](../assets/image_post/20240321193650.png)
 
 
-이러한 상태에서 hacker는 cname의 등록여부를 확인(0x05에서 설명)하고, 기존의 설정으로 인해 도메인 탈취 가능을 확인하기 위해, ex-provider에 기존의 서비스 명과 동일한 이름으로 등록한다. 아래 그림과 같이 기존의 dns 서버 설정의 cname이 그대로일 경우, user는 help.readmin.com에 접속하고자 했지만 실제로는 hacker가 준비한 서버로 연결되게 된다.
+이러한 상태에서 hacker는 cname에 설정된 값을 탐지([0x05] tool에서 설명)하였다. 이후 해당 설정으로 대상 도메인이 취약한지 확인하고자 한다. 우선 ex-provider에 기존 서비스 명과 동일한 이름으로 등록한다. 아래 그림과 같이 기존의 dns 서버 설정의 cname이 그대로일 경우, user는 help.readmin.com에 접속하려 했지만 실제로는 hacker가 준비한 서버로 연결된다.
 ![](../assets/image_post/20240321194500.png)
 
+이런 공격 시나리오로 subdomain takeover가 이루어진다.
 
 
 ## [0x05] tool
