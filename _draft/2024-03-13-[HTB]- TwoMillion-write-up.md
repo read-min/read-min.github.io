@@ -138,3 +138,120 @@ Finished
 ``` 
 
 
+## [0x02] join page
+---
+웹 페이지를 둘러보면 생각보다 많은 기능이 존재하지는 않다. 그 중 회원가입으로 보이는 부분이 보인다.
+![](../assets/image_post/20240326085716.png)
+
+임의의 값을 입력해서 진행하려 하니 정상적으로 진행되지 않는다.
+![](../assets/image_post/20240326085823.png)
+
+
+해당 사이트의 코드를 보면 htb-frontend.min.js, inviteapi.min.js 파일을 갖고 오며, verify api 검증을 통해 /register 페이지로의 이동을 확인할 수 있다.
+![](../assets/image_post/20240325200435.png)
+
+
+우선 inviteapi.min.js의 코드르 보자. 아래와 같이 난독화가 되어 있다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# curl http://2million.htb/js/inviteapi.min.js
+
+eval(function(p,a,c,k,e,d){e=function(c){return c.toString(36)};if(!''.replace(/^/,String)){while(c--){d[c.toString(a)]=k[c]||c.toString(a)}k=[function(e){return d[e]}];e=function(){return'\\w+'};c=1};while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c])}}return p}('1 i(4){h 8={"4":4};$.9({a:"7",5:"6",g:8,b:\'/d/e/n\',c:1(0){3.2(0)},f:1(0){3.2(0)}})}1 j(){$.9({a:"7",5:"6",b:\'/d/e/k/l/m\',c:1(0){3.2(0)},f:1(0){3.2(0)}})}',24,24,'response|function|log|console|code|dataType|json|POST|formData|ajax|type|url|success|api/v1|invite|error|data|var|verifyInviteCode|makeInviteCode|how|to|generate|verify'.split('|'),0,{}))
+```
+
+내용을 보면 난독화 되어 있는데, 각자 편한 방법으로 난독화를 풀면 된다. 나의 경우 [온라인 사이트](http://dean.edwards.name/unpacker/)를 통해 진행하였다😎. 해제된 내용은 아래와 같다. 주요 함수로 'verifyInviteCode'와 'makeInviteCode'가 존재한다.
+``` javascript
+function verifyInviteCode(code) {
+    var formData = {
+        "code": code
+    };
+    $.ajax({
+        type: "POST",
+        dataType: "json",
+        data: formData,
+        url: '/api/v1/invite/verify',
+        success: function(response) {
+            console.log(response)
+        },
+        error: function(response) {
+            console.log(response)
+        }
+    })
+}
+
+function makeInviteCode() {
+    $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: '/api/v1/invite/how/to/generate',
+        success: function(response) {
+            console.log(response)
+        },
+        error: function(response) {
+            console.log(response)
+        }
+    })
+}
+
+```
+
+makeInviteCode를 브라우저 console에서 실행한 결과 아래와 같이 나온다. ROT13으로 인코딩 되어있다는 힌트를 얻을 수 있다. 
+![](../assets/image_post/20240325194952.png)
+
+
+물론 curl을 통해서도 실행할 수 있다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# curlcurl -X POST "http://2million.htb/api/v1/invite/how/to/generate" | jq
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   249    0   249    0     0    644      0 --:--:-- --:--:-- --:--:--   645
+{
+  "0": 200,
+  "success": 1,
+  "data": {
+    "data": "Va beqre gb trarengr gur vaivgr pbqr, znxr n CBFG erdhrfg gb /ncv/i1/vaivgr/trarengr",
+    "enctype": "ROT13"
+  },
+  "hint": "Data is encrypted ... We should probbably check the encryption type in order to decrypt it..."
+}
+```
+
+decode 결과는 아래와 같다. `/api/v1/invite/generate` API를 호출하여 invite code를 생성하라는 내용이다.
+``` bash
+In order to generate the invite code, make a POST request to /api/v1/invite/generate
+```
+
+이제 invite code를 생성해보자. response에 base64 값이 전달된다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# curl -X POST "http://2million.htb/api/v1/invite/generate" | jq
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100    91    0    91    0     0    225      0 --:--:-- --:--:-- --:--:--   226
+{
+  "0": 200,
+  "success": 1,
+  "data": {
+    "code": "SzRTNVAtMVBYR0gtRlVPRzItWEc2MEk=",
+    "format": "encoded"
+  }
+}
+```
+
+생성된 값을 base64로 decoding 하여 invite 페이지에서 입력 시 register 페이지로 이동되며, 회원가입을 진행 할 수 있다.
+![](../assets/image_post/20240326085119.png)
+
+회원 가입한 계정 정보로 로그인 시 아래와 같은 페이지를 맞이하게 된다.
+![](../assets/image_post/20240326090034.png)
+
+
+## [0x0] 
+---
+
+
+
+
+## [xx] conclusion
+---
+뭔가 풀면서 억지로 이어지는 기분이 많이 든다...굳이 js
