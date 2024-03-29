@@ -1,7 +1,7 @@
 ---
 title: HTB TwoMillion Write-up
 categories: [HackTheBox, Machines]
-tags: [HackTheBox]
+tags: [HackTheBox, ]
 image:
     path: /assets/image_post/20240312190236.png
 ---
