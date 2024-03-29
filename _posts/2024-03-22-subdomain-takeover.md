@@ -212,7 +212,9 @@ ETC.
 Subdomain WordList
 - https://github.com/netsecurity-as/subfuz/blob/master/subdomain_megalist.txt
  
-
-
+아래 코드는 어떤 문서에서 진단 시 사용하는 코드라고 복사해놓았는데, 출처를 잊어버림
+``` bash
+subfinder -d https://sginfra.net >> domains ; assetfinder -subs-only https://sginfra.net >> domains ; amass enum -norecursive -noalts -d https://sginfra.net >> domains ; subjack -w domains -t 100 -timeout 30 -ssl -c ~/go/src/github.com/haccer/subjack/fingerprints.json -v 3 >> takeover ; 
+```
 
 
