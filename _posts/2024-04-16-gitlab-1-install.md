@@ -8,7 +8,7 @@ image:
 
 ## [0x00] overview
 ---
-os: ubuntu 22.04
+Gitlab 환경 구축을 위한 내용을 정리해보고자 한다. 설치 환경은 ubuntu 22.04 환경이다. 
 
 
 ## [0x01] install
@@ -19,7 +19,6 @@ os: ubuntu 22.04
 sudo apt-get update
 sudo apt-get install -y curl openssh-server ca-certificates tzdata perl
 ```
-
 
 GitLab 패키지 설치
 ``` bash
@@ -50,9 +49,7 @@ Password: 7w██████████████████████�
 
 ```
 
-
-
-
+이후 설치가 완료되었음을 알려주며, 등록한 도메인 또는 ip 로 접속하라는 문구가 나타난다.
 ``` bash
 gitlab Reconfigured!
 
@@ -105,3 +102,8 @@ https://gitlab.fra1.qualtrics.com/jfe/form/SV_6kVqZANThUQ1bZb?installation=omnib
 
 root 계정으로 접속하여 아래와 같이 Approve 진행해주어야 새로운 계정으로 로그인이 가능하다.
 ![](../assets/image_post/20240415190120.png)
+
+
+## [0x04] reference
+---
+- https://about.gitlab.com/install/#ubuntu
