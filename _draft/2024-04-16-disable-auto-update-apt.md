@@ -14,6 +14,8 @@ systemctl stop apt-daily.timer
 systemctl disable apt-daily.timer
 systemctl stop apt-daily-upgrade.timer
 systemctl disable apt-daily-upgrade.timer
+systemctl stop unattended-upgrades
+systemctl disable unattended-upgrades
 ```
 
 
