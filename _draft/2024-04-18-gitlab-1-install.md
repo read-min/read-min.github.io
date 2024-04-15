@@ -89,7 +89,7 @@ https://gitlab.fra1.qualtrics.com/jfe/form/SV_6kVqZANThUQ1bZb?installation=omnib
 ```
 
 
-## [0x02] login
+## [0x02] root login
 ---
 등록한 도메인 또는 ip 로 접근하면 아래와 같이 Gitlab에 성공적으로 접속할 수 있다.
 ![](../assets/image_post/20240415184454.png)
@@ -97,3 +97,11 @@ https://gitlab.fra1.qualtrics.com/jfe/form/SV_6kVqZANThUQ1bZb?installation=omnib
 이제 기본 계정인 root와 initial_root_password에 등록된 비밀번호를 통해 로그인하면 된다.
 ![](../assets/image_post/20240415184814.png)
 
+
+## [0x03] register
+---
+이제 root가 아닌 일반 계정을 생성해보자. 아래와 같은 형태로 작성하여 제출하면 관리자의 승인을 기다려야 한다.
+![](../assets/image_post/20240415190044.png)
+
+root 계정으로 접속하여 아래와 같이 Approve 진행해주어야 새로운 계정으로 로그인이 가능하다.
+![](../assets/image_post/20240415190120.png)
