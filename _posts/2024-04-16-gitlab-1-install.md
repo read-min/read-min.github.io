@@ -3,7 +3,7 @@ title: Gitlab - Install
 categories: [Dev, Gitlab]
 tags: [gitlab]
 image:
-    path: 
+    path: /assets/image_post/20240416083344.png
 ---
 
 ## [0x00] overview
