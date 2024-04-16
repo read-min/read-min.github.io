@@ -6,7 +6,7 @@ image:
     path: 
 ---
 
-## [0x00] summary
+## [0x00] command
 ---
 disable & stop 
 ``` bash
@@ -17,8 +17,6 @@ systemctl disable apt-daily-upgrade.timer
 systemctl stop unattended-upgrades
 systemctl disable unattended-upgrades
 ```
-
-
 
 
 ## [0x01] overview
