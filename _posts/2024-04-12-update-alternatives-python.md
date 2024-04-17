@@ -1,7 +1,7 @@
 ---
 title: python3 update-alternatives
 categories: [ETC., Tools]
-tags: [python, update-alternatives]
+tags: [python, update_alternatives]
 image:
     path: 
 ---
