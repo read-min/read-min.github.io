@@ -3,7 +3,7 @@ title: python3 update-alternatives
 categories: [ETC., Tools]
 tags: [python, update_alternatives]
 image:
-    path: 
+    path: /assets/image_post/20240417150620.png
 ---
 
 ## [0x00] code
