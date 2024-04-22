@@ -12,3 +12,9 @@ gitlab runner 사용할 때도 주의사항이 필요하다.
 
 
 https://gitlab-docs.infograb.net/ee/user/application_security/sast/index.html#configure-sast-in-your-cicd-yaml
+
+
+
+
+https://shg-engineer.tistory.com/16
+- Docker in Docker gitlab-runner 생성
