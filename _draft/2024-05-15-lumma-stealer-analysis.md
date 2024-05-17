@@ -94,6 +94,17 @@ sha 알고리즘과 관련된 항목을 찾는다.
 정상 동작을 위해 아래와 같이 opcode를 수정해준다.
 ![](../assets/image_post/20240515175407.png)
 
+
+## [0x00] TTPs
+---
+TA0004.T1190 – Exploit Public-Facing Application
+TA0005.T1055.012 - Process Injection. Process Hollowing
+
+TA0005.T1140 - Deobfuscate/Decode Files or Information
+TA0005.T1027.007 - Dynamic API Resolution
+
+
+
 ## [0x00] reference
 ---
 
@@ -104,3 +115,12 @@ main
 extract
 - md5: AA17CF9FF92E097F2B6CF9C993C4ABEC
 - sha256: 3984a5df1e5178681a26b5f55cf6c293bd88d487e8838a822df4f3ef0c4204d2
+
+
+https://cyberint.com/blog/research/the-lumma-stealer-infostealer-the-details/
+
+sample download
+- [Malware Bazear](https://bazaar.abuse.ch/download/59389ead2fa31decb31a25cfbe8d9859d831ef50bc21f9cde1aeb3c074b6d568/)
+
+ref
+- [Cyberint. 'The Lumma Stealer InfoStealer: The Details'](https://cyberint.com/blog/research/the-lumma-stealer-infostealer-the-details/)
