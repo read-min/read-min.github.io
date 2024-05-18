@@ -3,9 +3,8 @@ title: Lumma Stealer Analysis
 categories: [Analysis, Malware]
 tags: [malware, analysis, lumma, stealer]
 image:
-    path: 
+    path: /assets/image_post/20240518114344.png
 ---
-
 
 ## [0x00] overview
 ---
@@ -41,8 +40,7 @@ Vmware에서 Windows 7 x64 환경으로 구축하여 실행하려 했으나 필�
 ## [0x03] process injection
 ---
 
-필요한 준비가 다 된 후 프로세스를 생성하여 인젝션을 시도한다. 인젝션 대상은 `wab.exe`이다.
-> Windows Address Book(wab)는 윈도우 운영 체제에 기본적으로 탑재된 주소록 관리 애플리케이션 
+필요한 준비가 다 된 후 csc.exe, cmd.exe, notepad.exe, wab.exe 등 다양한 Windows 기본 프로그램 중 하나에 대해 Process Hollowing을 시도한다.
 
 ![](../assets/image_post/20240515164153.png)
 
@@ -103,8 +101,9 @@ Vmware에서 Windows 7 x64 환경으로 구축하여 실행하려 했으나 필�
 우선 기본적으로 추가적인 dll을 로드하기 위한 작업을 수행한다. 
 > ntdll.dll, crypt32.dll, advapi32.dll, msvcrt.dll, sechost.dll, winhttp.dll
 
-추출한 내역을 바탕으로 실행 시 아래와 같이 선택 화면이 나온다. 친절하기도 해라.. 혹시나 다른 프레임워크를 통해 포함된 내용인가 했으나 검색 해도 별다른 소득은 없다.
+추출한 내역을 바탕으로 실행 시 아래와 같이 선택 화면이 나온다. 친절하기도 해라.. 혹시나 다른 프레임워크를 통해 포함된 내용인가 했으나 검색 해도 별다른 소득은 없다. 물론 최초 main 악성코드를 통해서 실행하면 아래와 같은 팝업창은 나타나지 않는다.
 > Do you want to run a malware? (Crypt build to disable this message)
+
 ![](../assets/image_post/20240518000443.png)
 
 실행에 동의할 경우 필요한 api를 하나하나 로드한다.
@@ -144,55 +143,25 @@ WinHttpCloseHandle
 05/17/24 08:55:16 AM [    HTTPListener80]
 ```
 
-성공적으로 연결이 되었다면 api를 호출할 것으로 보인다.
+성공적으로 연결이 되었다면 POST 방식을 통해 `/api`를 호출하지만 더 이상의 연결이 이루어지지 않아 이후의 과정은 파악할 수가 없다.
 ![](../assets/image_post/20240518010313.png)
 
+![](../assets/image_post/20240518121052.png)
+
+웬만하면 다양한 방식으로 우회해서 진행할테지만, 해당 lumma의 경우 정확하게 값을 받아오고, 그 값을 assembly에 저장해서 direct로 jump하는 방식이라 이후 동작과정을 파악하는데 시간이 많이 소요 될 것으로 보인다.
 
 
-## [0x05] bypass exit 
-사용할 코드를 복호화 한다.
-![](../assets/image_post/20240515172343.png)
-
-![](../assets/image_post/20240515172421.png)
-
-![](../assets/image_post/20240515172526.png)
-
-
-sha 알고리즘과 관련된 항목을 찾는다.
-![](../assets/image_post/20240515173045.png)
-
-
-
-
-![](../assets/image_post/20240515174055.png)
-
-
-
-![](../assets/image_post/20240515174443.png)
-
-정상 동작을 위해 아래와 같이 opcode를 수정해준다.
-![](../assets/image_post/20240515175407.png)
-
-
-
-
-
-
-## [0x00] TTPs
+## [0x05] TTPs
 ---
+```
 TA0004.T1190 – Exploit Public-Facing Application
-TA0005.T1055.012 - Process Injection. Process Hollowing
-
+TA0005.T1055 - Process Injection. Process Hollowing
 TA0005.T1140 - Deobfuscate/Decode Files or Information
-TA0005.T1027.007 - Dynamic API Resolution
-
+TA0005.T1027 - Dynamic API Resolution
 TA0002.T1106 - Native API
-    a suspicious direct syscall was executed
-    suspicious module load using direct syscall
-
-## [0x00] reference
+```
+## [0x06] reference
 ---
-
 main
 - md5: 54E97708C9714C69BD34300EA9F397D6
 - sha256: 59389ead2fa31decb31a25cfbe8d9859d831ef50bc21f9cde1aeb3c074b6d568
@@ -200,9 +169,6 @@ main
 extract
 - md5: AA17CF9FF92E097F2B6CF9C993C4ABEC
 - sha256: 3984a5df1e5178681a26b5f55cf6c293bd88d487e8838a822df4f3ef0c4204d2
-
-
-https://cyberint.com/blog/research/the-lumma-stealer-infostealer-the-details/
 
 sample download
 - [Malware Bazear](https://bazaar.abuse.ch/download/59389ead2fa31decb31a25cfbe8d9859d831ef50bc21f9cde1aeb3c074b6d568/)
