@@ -9,16 +9,22 @@ layout: page
 {% assign df_dayjs_m = site.data.locales[lang].df.archives.dayjs | default: '/ MM' %}
 
 <div id="archives" class="pl-xl-3">
+  {% assign last_month = nil %}
   {% for post in site.posts %}
     {% assign cur_year = post.date | date: '%Y' %}
+    {% assign cur_month = post.date | date: '%m' %}
 
-    {% if cur_year != last_year %}
+    {% if cur_year != last_year or cur_month != last_month %}
       {% unless forloop.first %}</ul>{% endunless %}
 
       <time class="year lead d-block">{{ cur_year }}</time>
+      {% if cur_month != last_month %}
+        <time class="month lead d-block">{{ cur_month }}</time>
+      {% endif %}
       {{ '<ul class="list-unstyled">' }}
 
       {% assign last_year = cur_year %}
+      {% assign last_month = cur_month %}
     {% endif %}
 
     <li>
